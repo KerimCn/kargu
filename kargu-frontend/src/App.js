@@ -5,7 +5,6 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CasesPage from './pages/CasesPage';
 import UsersPage from './pages/UsersPage';
-import FalconEye from './pages/FalconEyePage';
 import './styles/index.css';
 
 const AppContent = () => {
@@ -32,19 +31,21 @@ const AppContent = () => {
         setCurrentPage={setCurrentPage}
       />
       
-      {/* Main Content Area */}
+      {/* Main Content Area - Centered */}
       <div 
-        className="transition-all duration-300"
         style={{ 
-          marginLeft: isSidebarCollapsed ? '80px' : '280px',
+          marginLeft: '80px',
           paddingTop: '64px',
           minHeight: '100vh',
+          display: 'flex',
+          justifyContent: 'center'
         }}
       >
-        {currentPage === 'dashboard' && <DashboardPage />}
-        {currentPage === 'cases' && <CasesPage />}
-        {currentPage === 'falcon-eye' && <FalconEye />}
-        {currentPage === 'users' && <UsersPage />}
+        <div style={{ width: '100%', maxWidth: '1400px', padding: '0 24px' }}>
+          {currentPage === 'dashboard' && <DashboardPage />}
+          {currentPage === 'cases' && <CasesPage />}
+          {currentPage === 'users' && <UsersPage />}
+        </div>
       </div>
     </div>
   );

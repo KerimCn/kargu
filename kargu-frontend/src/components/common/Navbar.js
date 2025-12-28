@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const Navbar = ({ currentPage, setCurrentPage }) => {
   const { user, logout } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState(null);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -14,173 +14,175 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
     { id: 'falcon-eye', label: 'Falcon Eye', icon: GiBeastEye },
    ...(user?.role === '4' ? [{ id: 'users', label: 'User Management', icon: Users }] : [])
   ];
+
   return (
     <>
-      {/* Sidebar */}
+      {/* Sidebar - Always Collapsed (80px) */}
       <div 
-        className="fixed left-0 top-0 h-full transition-all duration-300"
         style={{ 
-          width: isCollapsed ? '80px' : '280px',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          width: '80px',
+          height: '100vh',
           background: '#1E2229',
           borderRight: '1px solid #2A2F38',
           zIndex: 1000,
-          height: '100%'
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
-        {/* Logo & Toggle */}
+        {/* Logo */}
         <div 
-          className="flex items-center justify-between p-6"
-          style={{ borderBottom: '1px solid #2A2F38' }}
+          style={{ 
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '24px 0',
+            borderBottom: '1px solid #2A2F38'
+          }}
         >
-          {!isCollapsed && (
-            <div className="flex items-center">
-              <RadioTower size={32} color="#FF4D4D" />
-              <h1 
-                className="text-2xl font-bold" 
-                style={{ 
-                  marginLeft: '12px', 
-                  fontFamily: 'Rajdhani, sans-serif',
-                  color: '#E0E6ED'
-                }}
-              >
-                KARGU
-              </h1>
-            </div>
-          )}
-          
-          {isCollapsed && (
-            <div className="flex justify-center w-full" style={{
-                'padding-bottom':'35px'
-            }}>
-              <RadioTower size={32} color="#FF4D4D" style={{top:'100px'}}/>
-            </div>
-          )}
-          
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2"
-            style={{ 
-              color: '#E0E6ED', 
-              background: 'transparent',
-              position: isCollapsed ? 'absolute' : 'relative',
-              right: isCollapsed ? '16px' : '0',
-              'margin-top': isCollapsed ?'45px': '0',
-              'margin-right':  isCollapsed ?'6px' : '0'
-            }}
-          >
-            {isCollapsed ? <Menu size={20} /> : <X size={20} />}
-          </button>
+          <RadioTower size={32} color="#FF4D4D" />
         </div>
 
         {/* Menu Items */}
-        <div className="py-4">
+        <div style={{ flex: 1, paddingTop: '16px' }}>
           {menuItems.map(item => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
+            const isHovered = hoveredItem === item.id;
             
             return (
-              <button
+              <div 
                 key={item.id}
-                onClick={() => setCurrentPage(item.id)}
-                className="w-full flex items-center px-6 py-4 transition-all"
-                style={{
-                  background: isActive ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
-                  borderLeft: isActive ? '4px solid #FF4D4D' : '4px solid transparent',
-                  color: isActive ? '#FF4D4D' : '#E0E6ED',
-                  fontFamily: 'Rajdhani, sans-serif',
-                  fontWeight: 600,
-                  fontSize: '16px',
-                  letterSpacing: '0.5px'
-                }}
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setHoveredItem(item.id)}
+                onMouseLeave={() => setHoveredItem(null)}
               >
-                <Icon size={22} />
-                {!isCollapsed && (
-                  <span style={{ marginLeft: '16px' }}>{item.label.toUpperCase()}</span>
+                <button
+                  onClick={() => setCurrentPage(item.id)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '16px 0',
+                    background: isActive ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
+                    borderLeft: isActive ? '4px solid #FF4D4D' : '4px solid transparent',
+                    color: isActive ? '#FF4D4D' : '#E0E6ED',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Icon size={22} />
+                </button>
+
+                {/* Tooltip */}
+                {isHovered && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '85px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: '#1E2229',
+                      border: '1px solid #FF4D4D',
+                      borderRadius: '2px',
+                      padding: '8px 16px',
+                      whiteSpace: 'nowrap',
+                      color: '#E0E6ED',
+                      fontFamily: 'Rajdhani, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                      zIndex: 1001,
+                      pointerEvents: 'none',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    {item.label}
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
 
-        {/* User Info & Logout */}
+        {/* User Info & Logout - Bottom */}
         <div 
           style={{ 
-            position: 'absolute', 
-            bottom: 0, 
-            left: 0, 
-            right: 0,
             borderTop: '1px solid #2A2F38',
-            background: '#1E2229'
+            background: '#1E2229',
+            padding: '16px 0'
           }}
         >
-          {!isCollapsed && (
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div 
-                    className="text-sm font-semibold mb-1"
-                    style={{ color: '#E0E6ED' }}
-                  >
-                    {user?.full_name || user?.username}
-                  </div>
-                  <div 
-                    className="text-xs"
-                    style={{ color: '#6B7280' }}
-                  >
-                    {user?.role?.toUpperCase()}
-                  </div>
-                </div>
-                <button
-                  onClick={logout}
-                  className="p-2"
-                  style={{ 
-                    color: '#FF4D4D', 
-                    background: 'transparent',
-                    transition: 'transform 0.2s'
-                  }}
-                  title="Logout"
-                >
-                  <LogOut size={20} />
-                </button>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            {/* User Avatar */}
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(255, 77, 77, 0.1)',
+                border: '2px solid #FF4D4D',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FF4D4D',
+                fontFamily: 'Rajdhani, sans-serif',
+                fontWeight: 700,
+                fontSize: '16px',
+                cursor: 'default'
+              }}
+              title={user?.username}
+            >
+              {user?.username?.charAt(0).toUpperCase()}
             </div>
-          )}
 
-          {isCollapsed && (
-            <div className="p-4 flex justify-center">
-              <button
-                onClick={logout}
-                className="p-2"
-                style={{ color: '#FF4D4D', background: 'transparent' }}
-                title="Logout"
-              >
-                <LogOut size={22} />
-              </button>
-            </div>
-          )}
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              style={{ 
+                color: '#FF4D4D', 
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Logout"
+            >
+              <LogOut size={22} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Top Bar (Mobile/Additional Info) */}
+      {/* Top Bar */}
       <div 
-        className="fixed top-0 right-0 transition-all duration-300"
         style={{ 
-          left: isCollapsed ? '80px' : '280px',
-          height: '55px',
-          background: 'rgb(30, 34, 41)',
+          position: 'fixed',
+          top: 0,
+          left: '80px',
+          right: 0,
+          height: '64px',
+          background: '#0F1115',
+          borderBottom: '1px solid #2A2F38',
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
-          paddingLeft: '24px',
-          paddingRight: '24px',
-          width: '100%'
+          justifyContent: 'center'
         }}
       >
         <h2 
-          className="text-xl font-bold"
           style={{ 
             fontFamily: 'Rajdhani, sans-serif',
-            color: '#E0E6ED'
+            color: '#E0E6ED',
+            fontSize: '20px',
+            fontWeight: 700,
+            margin: 0
           }}
         >
           {menuItems.find(item => item.id === currentPage)?.label.toUpperCase()}

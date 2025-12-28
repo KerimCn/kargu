@@ -1,41 +1,43 @@
 import React from 'react';
-import { Check, Trash2 } from 'lucide-react';
+import { Check, Trash2, Lock, Eye } from 'lucide-react';
 
-const CaseCard = ({ caseData, onUpdate, onDelete, isAdmin }) => {
- if(isAdmin === '1' && caseData.status !=='resolved'){
-  return null;
- };
-
-
+const CaseCard = ({ caseData, onUpdate, onDelete, onViewDetail, isAdmin }) => {
   return (
     <div className="card">
       <div className="flex justify-between items-start">
         <div style={{ flex: 1 }}>
-          
-         <div className="flex items-center gap-4 mb-2">
-            <h3 
-            className="text-xl font-bold"
+          <h3 
+            className="text-xl font-bold mb-2" 
             style={{ fontFamily: 'Rajdhani, sans-serif' }}
-            >
+          >
             {caseData.title}
-            </h3>
-
-            <div className="flex gap-2">
-            <span className={`badge badge-${caseData.severity}`}>
-                {caseData.severity?.toUpperCase()}
-            </span>
-            <span className={`badge badge-${caseData.status}`}>
-                {caseData.status?.toUpperCase()}
-            </span>
-            </div>
-            </div>
+          </h3>
           <p className="text-sm mb-3 text-muted">
             {caseData.description}
           </p>
+          <div className="flex gap-3">
+            <span className={`badge badge-${caseData.severity}`}>
+              {caseData.severity?.toUpperCase()}
+            </span>
+            <span className={`badge badge-${caseData.status}`}>
+              {caseData.status?.toUpperCase()}
+            </span>
+          </div>
         </div>
-               
+        
         <div className="flex gap-2">
-          {(isAdmin === '3' || isAdmin === '4') && (
+          {/* View Detail Button - Herkes görebilir */}
+          <button
+            onClick={() => onViewDetail(caseData.id)}
+            className="p-2"
+            style={{ color: '#00C896', background: 'transparent' }}
+            title="View Details"
+          >
+            <Eye size={20} />
+          </button>
+
+          {/* Admin Butonları */}
+         {(isAdmin === '3' || isAdmin === '4') && (
           <>
           {caseData.status !== 'resolved' && (
             <button
@@ -60,6 +62,7 @@ const CaseCard = ({ caseData, onUpdate, onDelete, isAdmin }) => {
         )}
         </div>
       </div>
+      
       <div 
         className="text-xs mt-4 text-dim" 
         style={{ fontFamily: 'JetBrains Mono, monospace' }}

@@ -97,6 +97,13 @@ export const caseAPI = {
     return handleResponse(response);
   },
 
+  getDetail: async (id) => {
+    const response = await fetch(`${API_URL}/cases/${id}/detail`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
   create: async (caseData) => {
     const response = await fetch(`${API_URL}/cases`, {
       method: 'POST',

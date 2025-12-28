@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import CaseList from '../components/cases/CaseList';
 import CreateCaseModal from '../components/cases/CreateCaseModal';
+import CaseDetailPage from './CaseDetailPage';
 import { caseAPI, userAPI } from '../services/api';
-import { useAuth} from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const CasesPage = () => {
   const { user } = useAuth();
@@ -11,17 +12,22 @@ const CasesPage = () => {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedCaseId, setSelectedCaseId] = useState(null);
 
-  //Control User Permission 1-2 = Viewer & Investigator 2-3 IR & Admin
-  const isAdmin = user.role;
+  // Kullanıcının admin olup olmadığını kontrol et
+  const isAdmin = user?.role;
+  let adminControl = false;
 
-    console.log('CasesPage - User:', user); // Debug için
-  console.log('CasesPage - isAdmin:', isAdmin); // Debug için
-
+  if (isAdmin === '3' || isAdmin === '4'){
+    adminControl = true;
+  }
+  
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!selectedCaseId) {
+      fetchData();
+    }
+  }, [selectedCaseId]);
 
   const fetchData = async () => {
     try {
@@ -38,27 +44,37 @@ const CasesPage = () => {
     }
   };
 
+  const handleViewDetail = (caseId) => {
+    setSelectedCaseId(caseId);
+  };
+
+  const handleBackToCases = () => {
+    setSelectedCaseId(null);
+    fetchData();
+  };
+
   const handleCreateCase = async (formData) => {
-    if (isAdmin === '1' || isAdmin === '2'){
-      alert ('Case oluşturma yetkiniz bulunmamaktadır.');
+    if (!adminControl) {
+      alert('Only admins can create cases');
       return;
     }
+
     try {
       await caseAPI.create(formData);
       setShowModal(false);
       fetchData();
     } catch (error) {
       console.error('Failed to create case:', error);
-      console.log(error);
       alert('Failed to create case');
     }
   };
 
   const handleUpdateCase = async (id, updates) => {
-     if (isAdmin === '1' ){
-      alert ('Yetkiniz bulunmamaktadır.');
+    if (!adminControl) {
+      alert('Only admins can update cases');
       return;
     }
+
     try {
       await caseAPI.update(id, updates);
       fetchData();
@@ -69,10 +85,11 @@ const CasesPage = () => {
   };
 
   const handleDeleteCase = async (id) => {
-     if (isAdmin === '1' || isAdmin === '2'){
-      alert ('Case oluşturma yetkiniz bulunmamaktadır.');
+    if (!adminControl) {
+      alert('Only admins can delete cases');
       return;
     }
+
     if (!window.confirm('Are you sure you want to delete this case?')) return;
     
     try {
@@ -84,22 +101,36 @@ const CasesPage = () => {
     }
   };
 
+  // Detay sayfası gösteriliyorsa
+  if (selectedCaseId) {
+    return <CaseDetailPage caseId={selectedCaseId} onBack={handleBackToCases} />;
+  }
+
   return (
     <div className="container py-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 
-          className="text-3xl font-bold" 
-          style={{ fontFamily: 'Rajdhani, sans-serif' }}
-        >
-          INCIDENT CASES
-        </h2>
-        {( isAdmin === '3' || isAdmin === '4') && (
-        <button
-          onClick={() => setShowModal(true)}
-          className="btn btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} /> NEW CASE
-        </button>
+        <div>
+          <h2 
+            className="text-3xl font-bold" 
+            style={{ fontFamily: 'Rajdhani, sans-serif' }}
+          >
+            INCIDENT CASES
+          </h2>
+          {!adminControl && (
+            <p className="text-sm text-muted mt-2">
+              View-only mode. Contact an administrator to create or modify cases.
+            </p>
+          )}
+        </div>
+        
+        {/* Sadece admin ise "NEW CASE" butonu göster */}
+        {adminControl && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn btn-primary flex items-center gap-2"
+          >
+            <Plus size={18} /> NEW CASE
+          </button>
         )}
       </div>
 
@@ -109,17 +140,21 @@ const CasesPage = () => {
         <CaseList 
           cases={cases} 
           onUpdate={handleUpdateCase} 
-          onDelete={handleDeleteCase} 
+          onDelete={handleDeleteCase}
+          onViewDetail={handleViewDetail}
           isAdmin={isAdmin}
         />
       )}
 
-      <CreateCaseModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onCreate={handleCreateCase}
-        users={users}
-      />
+      {/* Modal sadece admin için */}
+      {adminControl && (
+        <CreateCaseModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onCreate={handleCreateCase}
+          users={users}
+        />
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import CaseCard from './CaseCard';  // CaseCard.js dosyası
 
-const CaseList = ({ cases, onUpdate, onDelete, isAdmin }) => {
+const CaseList = ({ cases, onUpdate, onDelete, onViewDetail, isAdmin }) => {
 
   if (cases.length === 0) {
     return (
@@ -22,6 +22,7 @@ const CaseList = ({ cases, onUpdate, onDelete, isAdmin }) => {
             caseData={c} 
             onUpdate={onUpdate} 
             onDelete={onDelete} 
+            onViewDetail={onViewDetail}
             isAdmin={isAdmin}
           />
         </div>
@@ -31,3 +32,4 @@ const CaseList = ({ cases, onUpdate, onDelete, isAdmin }) => {
 };
 
 export default CaseList;
+
