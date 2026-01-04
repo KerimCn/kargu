@@ -42,9 +42,9 @@ const initDB = async () => {
     // Roles Name table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS roles (
-        id SERIAL PRIMARY KEY,
-        rolename VARCHAR(20)
-      )
+      id SERIAL PRIMARY KEY,
+      rolename VARCHAR(30) UNIQUE NOT NULL
+    )
     `);
 
     // Cases table
@@ -63,12 +63,16 @@ const initDB = async () => {
       )
     `);
 
-    // Roles Name Creating
-    await pool.query(
-      'INSERT INTO roles (rolename) VALUES ($1), ($2), ($3), ($4)',
-      ['Viewer','Investigator','Incident Responder', 'Admin']
-    );
-
+    // Creating Role Names
+    await pool.query(`
+      INSERT INTO roles (rolename)
+      VALUES
+        ('Viewer'),
+        ('Investigator'),
+        ('Incident Responder'),
+        ('Admin')
+      ON CONFLICT (rolename) DO NOTHING;
+    `);
 
     // Create default admin user
     const bcrypt = require('bcryptjs');
