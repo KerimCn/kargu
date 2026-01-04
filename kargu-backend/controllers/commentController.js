@@ -44,6 +44,11 @@ class CommentController {
         return res.status(404).json({ error: 'Case bulunamadı.' });
       }
 
+      // Check if case is resolved - cannot add comments to resolved cases
+      if (caseExists.status === 'resolved') {
+        return res.status(403).json({ error: 'Kapanmış case\'lere yorum eklenemez.' });
+      }
+
       // Verify user exists
       const userExists = await UserModel.findById(user_id);
       if (!userExists) {

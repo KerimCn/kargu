@@ -61,7 +61,35 @@ const initDB = async () => {
         created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        resolved_at TIMESTAMP
+        resolved_at TIMESTAMP,
+        resolution_summary TEXT
+      )
+    `);
+
+    // Add resolution_summary column if it doesn't exist (for existing databases)
+    await pool.query(`
+      ALTER TABLE cases 
+      ADD COLUMN IF NOT EXISTS resolution_summary TEXT
+    `);
+
+    // Tasks table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        assigned_to INTEGER REFERENCES users(id),
+        assigned_to_name VARCHAR(100),
+        status VARCHAR(20) DEFAULT 'pending',
+        priority VARCHAR(20) DEFAULT 'medium',
+        due_date DATE,
+        result VARCHAR(20),
+        comment TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP
       )
     `);
 

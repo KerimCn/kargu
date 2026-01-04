@@ -1,4 +1,5 @@
 const CaseModel = require('../models/caseModel');
+const TaskModel = require('../models/taskModel');
 
 class CaseController {
   static async getAllCases(req, res) {
@@ -34,6 +35,9 @@ class CaseController {
         return res.status(404).json({ error: 'Case not found' });
       }
 
+      // Get tasks from database
+      const tasks = await TaskModel.findAllByCaseId(req.params.id);
+
       // Mock data - ileride gerçek verilerle değiştirilecek
       const detailData = {
         case: caseData,
@@ -50,11 +54,7 @@ class CaseController {
           { id: 2, timestamp: '2024-01-15 10:24:12', event: 'Registry Modified', path: 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', status: 'Critical' },
           { id: 3, timestamp: '2024-01-15 10:25:03', event: 'Network Connection', path: '185.220.101.45:443', status: 'Suspicious' }
         ],
-        tasks: [
-          { id: 1, name: 'Malware Analysis', assigned_to: 'Alice', status: 'In Progress', priority: 'High', due_date: '2024-01-20' },
-          { id: 2, name: 'Threat Intelligence Check', assigned_to: 'Bob', status: 'Completed', priority: 'Medium', due_date: '2024-01-18' },
-          { id: 3, name: 'Containment Actions', assigned_to: 'Charlie', status: 'Pending', priority: 'Critical', due_date: '2024-01-16' }
-        ],
+        tasks: tasks,
         playbooks: [
           { id: 1, name: 'Ransomware Response', version: '2.1', last_run: '2024-01-15 10:30:00', status: 'Success', steps_completed: '8/10' },
           { id: 2, name: 'Initial Triage', version: '1.5', last_run: '2024-01-15 10:15:00', status: 'Success', steps_completed: '12/12' }
@@ -210,12 +210,30 @@ class CaseController {
   static async updateCase(req, res) {
     try {
       const updates = {};
+      const userId = req.user.id;
+
+      // Get existing case to check permissions
+      const existingCase = await CaseModel.findById(req.params.id);
+      if (!existingCase) {
+        return res.status(404).json({ error: 'Case not found' });
+      }
+
+      // If trying to reopen a resolved case, check permissions
+      if (req.body.status === 'open' && existingCase.status === 'resolved') {
+        const isCaseCreator = existingCase.created_by === userId;
+        const isCaseAssignee = existingCase.assigned_to === userId;
+        
+        if (!isCaseCreator && !isCaseAssignee) {
+          return res.status(403).json({ error: 'Sadece case\'i oluşturan veya atanan kişi case\'i tekrar açabilir.' });
+        }
+      }
 
       if (req.body.status !== undefined) updates.status = req.body.status;
       if (req.body.severity !== undefined) updates.severity = req.body.severity;
       if (req.body.assigned_to !== undefined) updates.assigned_to = req.body.assigned_to;
       if (req.body.title !== undefined) updates.title = req.body.title;
       if (req.body.description !== undefined) updates.description = req.body.description;
+      if (req.body.resolution_summary !== undefined) updates.resolution_summary = req.body.resolution_summary;
 
       const caseData = await CaseModel.update(req.params.id, updates);
 

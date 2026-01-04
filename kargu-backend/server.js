@@ -10,6 +10,7 @@ const userRoutes = require('./routes/userRoutes');
 const caseRoutes = require('./routes/caseRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const commentRoutes = require('./routes/commentController');
+const taskRoutes = require('./routes/taskRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,6 +51,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/cases', caseRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/tasks', taskRoutes);
+console.log('✓ Task routes loaded');
 
 // Health check
 app.get('/health', (req, res) => {

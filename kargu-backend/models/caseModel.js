@@ -75,6 +75,12 @@ class CaseModel {
       paramCount++;
     }
 
+    if (updates.resolution_summary !== undefined) {
+      fields.push(`resolution_summary = $${paramCount}`);
+      values.push(updates.resolution_summary);
+      paramCount++;
+    }
+
     if (fields.length === 0) {
       throw new Error('No fields to update');
     }
