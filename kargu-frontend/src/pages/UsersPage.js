@@ -3,8 +3,10 @@ import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import CreateUserModal from '../components/users/CreateUserModal';
 import EditUserModal from '../components/users/EditUserModal';
 import { userAPI } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const UsersPage = () => {
+  const { isDark } = useTheme();
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -109,7 +111,7 @@ const UsersPage = () => {
                 left: '12px', 
                 top: '50%', 
                 transform: 'translateY(-50%)',
-                color: '#6B7280'
+                color: isDark ? '#6B7280' : '#4A5568'
               }} 
             />
             <input
@@ -226,7 +228,7 @@ const UsersPage = () => {
                     <td 
                       style={{ 
                         padding: '12px',
-                        color: '#9CA3AF',
+                        color: isDark ? '#9CA3AF' : '#2D3748',
                         fontSize: '13px',
                         fontFamily: 'Inter, sans-serif'
                       }}
@@ -236,7 +238,7 @@ const UsersPage = () => {
                     <td 
                       style={{ 
                         padding: '12px',
-                        color: '#9CA3AF',
+                        color: isDark ? '#9CA3AF' : '#2D3748',
                         fontSize: '13px',
                         fontFamily: 'JetBrains Mono, monospace'
                       }}
@@ -251,7 +253,7 @@ const UsersPage = () => {
                     <td 
                       style={{ 
                         padding: '12px',
-                        color: '#6B7280',
+                        color: isDark ? '#6B7280' : '#4A5568',
                         fontSize: '13px',
                         fontFamily: 'JetBrains Mono, monospace'
                       }}

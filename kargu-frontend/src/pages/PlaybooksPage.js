@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X, PlusCircle, MinusCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { playbookAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const PlaybooksPage = () => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [playbooks, setPlaybooks] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -221,7 +223,7 @@ const PlaybooksPage = () => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#9CA3AF',
+              color: isDark ? '#9CA3AF' : '#2D3748',
               cursor: 'pointer',
               padding: '4px'
             }}
@@ -426,7 +428,7 @@ const PlaybooksPage = () => {
               background: 'transparent',
               border: '1px solid #2A2F38',
               borderRadius: '4px',
-              color: '#9CA3AF',
+              color: isDark ? '#9CA3AF' : '#2D3748',
               cursor: 'pointer',
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600
@@ -541,7 +543,7 @@ const PlaybooksPage = () => {
                         {playbook.name}
                       </h3>
                       <p style={{ 
-                        color: '#9CA3AF', 
+                        color: isDark ? '#9CA3AF' : '#2D3748', 
                         fontSize: '13px', 
                         fontFamily: 'Rajdhani, sans-serif',
                         margin: 0
@@ -632,7 +634,7 @@ const PlaybooksPage = () => {
                             </h4>
                             {step.description && (
                               <p style={{ 
-                                color: '#9CA3AF', 
+                                color: isDark ? '#9CA3AF' : '#2D3748', 
                                 fontSize: '14px', 
                                 marginBottom: step.checklist && step.checklist.length > 0 ? '12px' : '0',
                                 fontFamily: 'Rajdhani, sans-serif',
@@ -673,7 +675,7 @@ const PlaybooksPage = () => {
                       </div>
                     ) : (
                       <p style={{ 
-                        color: '#9CA3AF', 
+                        color: isDark ? '#9CA3AF' : '#2D3748', 
                         fontSize: '14px', 
                         fontFamily: 'Rajdhani, sans-serif',
                         textAlign: 'center',

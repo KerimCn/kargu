@@ -35,8 +35,8 @@ export const ThemeProvider = ({ children }) => {
       document.documentElement.style.setProperty('--bg-sidebar', '#F8F9FA');
       document.documentElement.style.setProperty('--bg-header', '#FFFFFF');
       document.documentElement.style.setProperty('--text-primary', '#1A1F2E');
-      document.documentElement.style.setProperty('--text-secondary', '#4A5568');
-      document.documentElement.style.setProperty('--text-tertiary', '#718096');
+      document.documentElement.style.setProperty('--text-secondary', '#2D3748');
+      document.documentElement.style.setProperty('--text-tertiary', '#1A1F2E');
       document.documentElement.style.setProperty('--border-color', '#E2E8F0');
       document.documentElement.style.setProperty('--border-hover', '#CBD5E0');
       document.documentElement.style.setProperty('--shadow', '0 2px 8px rgba(0, 0, 0, 0.08)');

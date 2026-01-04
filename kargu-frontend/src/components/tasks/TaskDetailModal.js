@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { CheckCircle, XCircle, Send } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
+  const { isDark } = useTheme();
   const [comment, setComment] = useState('');
   const [result, setResult] = useState('');
 
@@ -33,7 +35,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
           <label style={{ 
             display: 'block', 
             marginBottom: '4px', 
-            color: '#9CA3AF', 
+            color: isDark ? '#9CA3AF' : '#2D3748', 
             fontSize: '12px',
             fontFamily: 'Rajdhani, sans-serif'
           }}>
@@ -49,7 +51,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '4px', 
-              color: '#9CA3AF', 
+              color: isDark ? '#9CA3AF' : '#2D3748', 
               fontSize: '12px',
               fontFamily: 'Rajdhani, sans-serif'
             }}>
@@ -72,7 +74,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: '#9CA3AF', 
+                color: isDark ? '#9CA3AF' : '#2D3748', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
@@ -94,7 +96,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: '#9CA3AF', 
+                color: isDark ? '#9CA3AF' : '#2D3748', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
@@ -111,7 +113,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: '#9CA3AF', 
+                color: isDark ? '#9CA3AF' : '#2D3748', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
@@ -133,7 +135,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: '#9CA3AF', 
+                color: isDark ? '#9CA3AF' : '#2D3748', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
@@ -156,7 +158,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '4px', 
-              color: '#9CA3AF', 
+              color: isDark ? '#9CA3AF' : '#2D3748', 
               fontSize: '12px',
               fontFamily: 'Rajdhani, sans-serif'
             }}>
@@ -179,7 +181,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '4px', 
-              color: '#9CA3AF', 
+              color: isDark ? '#9CA3AF' : '#2D3748', 
               fontSize: '12px',
               fontFamily: 'Rajdhani, sans-serif'
             }}>
@@ -339,7 +341,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
       {!canClose && !isTaskAssignee && !isCaseOwner && (
         <div style={{ 
           background: 'rgba(107, 114, 128, 0.1)', 
-          border: '1px solid #6B7280', 
+          border: `1px solid ${isDark ? '#6B7280' : '#CBD5E0'}`, 
           borderRadius: '4px', 
           padding: '12px',
           textAlign: 'center',

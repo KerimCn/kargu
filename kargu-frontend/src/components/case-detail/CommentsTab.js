@@ -1,5 +1,6 @@
 import React from 'react';
 import { Edit2, Trash2, Send, X } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const CommentsTab = ({
   user,
@@ -17,6 +18,7 @@ const CommentsTab = ({
   handleUpdateComment,
   handleDeleteComment
 }) => {
+  const { isDark } = useTheme();
   return (
     <div>
       {/* Add Comment Form - Only for users with role !== '1' and case is not resolved */}
@@ -123,7 +125,7 @@ const CommentsTab = ({
                   </div>
                   <div 
                     style={{
-                      color: '#9CA3AF',
+                      color: isDark ? '#9CA3AF' : '#2D3748',
                       fontFamily: 'JetBrains Mono, monospace',
                       fontSize: '11px'
                     }}
@@ -148,7 +150,7 @@ const CommentsTab = ({
                           border: '1px solid #2A2F38',
                           borderRadius: '4px',
                           padding: '6px 12px',
-                          color: '#9CA3AF',
+                          color: isDark ? '#9CA3AF' : '#2D3748',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -177,7 +179,7 @@ const CommentsTab = ({
                             border: '1px solid #2A2F38',
                             borderRadius: '4px',
                             padding: '6px 12px',
-                            color: '#9CA3AF',
+                            color: isDark ? '#9CA3AF' : '#2D3748',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -204,7 +206,7 @@ const CommentsTab = ({
                             border: '1px solid #2A2F38',
                             borderRadius: '4px',
                             padding: '6px 12px',
-                            color: '#9CA3AF',
+                            color: isDark ? '#9CA3AF' : '#2D3748',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',

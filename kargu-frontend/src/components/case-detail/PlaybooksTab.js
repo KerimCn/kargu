@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Edit2, Trash2, X, Play, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import { playbookExecutionAPI } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const PlaybooksTab = ({
   isCaseOwner,
@@ -29,6 +30,7 @@ const PlaybooksTab = ({
   handlePrevStep,
   fetchCasePlaybooks
 }) => {
+  const { isDark } = useTheme();
   const canManagePlaybooks = isCaseOwner || isCaseCreator;
 
   return (
@@ -58,7 +60,7 @@ const PlaybooksTab = ({
       )}
       
       {casePlaybooks.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#9CA3AF' : '#2D3748' }}>
           <p>Bu case'e henüz playbook eklenmemiş.</p>
         </div>
       ) : (
@@ -105,7 +107,7 @@ const PlaybooksTab = ({
                       )}
                     </h3>
                     <p style={{ 
-                      color: '#9CA3AF', 
+                      color: isDark ? '#9CA3AF' : '#2D3748', 
                       fontSize: '13px',
                       fontFamily: 'Rajdhani, sans-serif',
                       margin: 0
@@ -245,7 +247,7 @@ const PlaybooksTab = ({
                             
                             {step.description && (
                               <p style={{ 
-                                color: '#9CA3AF', 
+                                color: isDark ? '#9CA3AF' : '#2D3748', 
                                 fontSize: '14px', 
                                 marginBottom: '12px',
                                 fontFamily: 'Rajdhani, sans-serif',
@@ -307,7 +309,7 @@ const PlaybooksTab = ({
                                   Yorum:
                                 </p>
                                 <p style={{ 
-                                  color: '#9CA3AF', 
+                                  color: isDark ? '#9CA3AF' : '#2D3748', 
                                   fontSize: '13px', 
                                   fontFamily: 'Rajdhani, sans-serif',
                                   lineHeight: '1.6',
@@ -580,7 +582,7 @@ const PlaybooksTab = ({
                     
                     {selectedCasePlaybook.steps[currentStepIndex]?.description && (
                       <p style={{ 
-                        color: '#9CA3AF', 
+                        color: isDark ? '#9CA3AF' : '#2D3748', 
                         fontSize: '14px', 
                         marginBottom: '16px',
                         fontFamily: 'Rajdhani, sans-serif',

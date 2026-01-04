@@ -295,7 +295,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                 style={{
                   padding: '32px',
                   textAlign: 'center',
-                  color: isDark ? '#8B8E94' : '#718096',
+                  color: isDark ? '#8B8E94' : '#2D3748',
                   fontFamily: 'Rajdhani, sans-serif'
                 }}
               >
@@ -349,7 +349,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                       <div
                         style={{
                           fontFamily: 'Rajdhani, sans-serif',
-                          color: isDark ? '#8B8E94' : '#718096',
+                          color: isDark ? '#8B8E94' : '#2D3748',
                           fontSize: '12px',
                           marginBottom: '4px'
                         }}
@@ -359,7 +359,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                       <div
                         style={{
                           fontFamily: 'Rajdhani, sans-serif',
-                          color: isDark ? '#6B7280' : '#A0AEC0',
+                          color: isDark ? '#6B7280' : '#4A5568',
                           fontSize: '11px'
                         }}
                       >

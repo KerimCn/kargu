@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 export const renderTable = (columns, data, searchTerm, setSearchTerm) => {
   const filterData = (items) => {
@@ -24,7 +25,7 @@ export const renderTable = (columns, data, searchTerm, setSearchTerm) => {
             left: '12px', 
             top: '50%', 
             transform: 'translateY(-50%)',
-            color: '#6B7280'
+            color: 'var(--text-tertiary, #6B7280)'
           }} 
         />
         <input
@@ -75,7 +76,7 @@ export const renderTable = (columns, data, searchTerm, setSearchTerm) => {
                     key={col.key}
                     style={{ 
                       padding: '12px',
-                      color: '#9CA3AF',
+                      color: 'var(--text-tertiary, #9CA3AF)',
                       fontSize: '13px',
                       fontFamily: 'JetBrains Mono, monospace'
                     }}

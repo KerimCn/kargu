@@ -5,9 +5,11 @@ import CreateCaseModal from '../components/cases/CreateCaseModal';
 import CaseDetailPage from './CaseDetailPage';
 import { caseAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [cases, setCases] = useState([]);
   const [filteredCases, setFilteredCases] = useState([]);
   const [users, setUsers] = useState([]);
@@ -184,7 +186,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
               background: statusFilter === 'all' ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
               border: statusFilter === 'all' ? '1px solid #FF4D4D' : '1px solid transparent',
               borderRadius: '4px',
-              color: statusFilter === 'all' ? '#FF4D4D' : '#9CA3AF',
+              color: statusFilter === 'all' ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#1A1F2E'),
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px',
@@ -193,14 +195,14 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
             }}
             onMouseEnter={(e) => {
               if (statusFilter !== 'all') {
-                e.currentTarget.style.borderColor = '#2A2F38';
-                e.currentTarget.style.color = '#E0E6ED';
+                e.currentTarget.style.borderColor = isDark ? '#2A2F38' : '#E2E8F0';
+                e.currentTarget.style.color = isDark ? '#E0E6ED' : '#1A1F2E';
               }
             }}
             onMouseLeave={(e) => {
               if (statusFilter !== 'all') {
                 e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.color = '#9CA3AF';
+                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#1A1F2E';
               }
             }}
           >
@@ -222,14 +224,14 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
             }}
             onMouseEnter={(e) => {
               if (statusFilter !== 'open') {
-                e.currentTarget.style.borderColor = '#2A2F38';
-                e.currentTarget.style.color = '#E0E6ED';
+                e.currentTarget.style.borderColor = isDark ? '#2A2F38' : '#E2E8F0';
+                e.currentTarget.style.color = isDark ? '#E0E6ED' : '#1A1F2E';
               }
             }}
             onMouseLeave={(e) => {
               if (statusFilter !== 'open') {
                 e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.color = '#9CA3AF';
+                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#1A1F2E';
               }
             }}
           >
@@ -251,14 +253,14 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
             }}
             onMouseEnter={(e) => {
               if (statusFilter !== 'resolved') {
-                e.currentTarget.style.borderColor = '#2A2F38';
-                e.currentTarget.style.color = '#E0E6ED';
+                e.currentTarget.style.borderColor = isDark ? '#2A2F38' : '#E2E8F0';
+                e.currentTarget.style.color = isDark ? '#E0E6ED' : '#1A1F2E';
               }
             }}
             onMouseLeave={(e) => {
               if (statusFilter !== 'resolved') {
                 e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.color = '#9CA3AF';
+                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#1A1F2E';
               }
             }}
           >

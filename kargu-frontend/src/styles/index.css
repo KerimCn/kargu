@@ -289,6 +289,10 @@ input:focus, textarea:focus, select:focus {
 .text-muted { color: #9CA3AF; }
 .text-dim { color: #6B7280; }
 
+/* Theme-aware text colors */
+[data-theme="light"] .text-muted { color: #2D3748; }
+[data-theme="light"] .text-dim { color: #4A5568; }
+
 .bg-surface { background: #1E2229; }
 
 /* Other */

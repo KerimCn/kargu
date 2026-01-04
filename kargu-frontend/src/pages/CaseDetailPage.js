@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Monitor, Clock, User, Server, Search, Lock, Send } from 'lucide-react';
 import { caseAPI, commentAPI, taskAPI, userAPI, playbookAPI, casePlaybookAPI, playbookExecutionAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Modal from '../components/common/Modal';
 import DataTab from '../components/case-detail/DataTab';
 import TasksTab from '../components/case-detail/TasksTab';
@@ -12,6 +13,7 @@ import ProcessTreeTab from '../components/case-detail/ProcessTreeTab';
 
 const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [detailData, setDetailData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(initialTab || 'data');
@@ -727,7 +729,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
                   background: activeTab === tab.id ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
                   border: activeTab === tab.id ? '1px solid #FF4D4D' : '1px solid transparent',
                   borderRadius: '2px',
-                  color: activeTab === tab.id ? '#FF4D4D' : '#9CA3AF',
+                  color: activeTab === tab.id ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#1A1F2E'),
                   fontFamily: 'Rajdhani, sans-serif',
                   fontWeight: 600,
                   transition: 'all 0.2s'
@@ -780,7 +782,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
               }}
             />
             <p style={{ 
-              color: '#9CA3AF', 
+              color: isDark ? '#9CA3AF' : '#2D3748', 
               fontSize: '12px', 
               marginTop: '4px',
               fontStyle: 'italic'

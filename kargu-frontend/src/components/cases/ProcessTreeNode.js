@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = '' }) => {
+  const { isDark } = useTheme();
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = process.children && process.children.length > 0;
 
@@ -40,7 +42,7 @@ const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = ''
         {/* Tree Lines */}
         <span
           style={{
-            color: '#6B7280',
+            color: isDark ? '#6B7280' : '#4A5568',
             marginRight: '6px',
             fontFamily: 'JetBrains Mono, monospace',
             whiteSpace: 'pre',
@@ -52,7 +54,7 @@ const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = ''
 
         {/* Expand/Collapse Icon */}
         {hasChildren && (
-          <span style={{ marginRight: '6px', color: '#9CA3AF' }}>
+          <span style={{ marginRight: '6px', color: isDark ? '#9CA3AF' : '#2D3748' }}>
             {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </span>
         )}

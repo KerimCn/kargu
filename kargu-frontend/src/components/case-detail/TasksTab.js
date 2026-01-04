@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import Modal from '../common/Modal';
 import TaskDetailModal from '../tasks/TaskDetailModal';
+import { useTheme } from '../../context/ThemeContext';
 
 const TasksTab = ({
   isCaseOwner,
@@ -29,6 +30,7 @@ const TasksTab = ({
   handleDeleteTask,
   handleUpdateTaskStatus
 }) => {
+  const { isDark } = useTheme();
   return (
     <div>
       {/* Create Task Button - Only for case owner and case is not resolved */}
@@ -98,7 +100,7 @@ const TasksTab = ({
                   </div>
                   {task.description && (
                     <p style={{ 
-                      color: '#9CA3AF', 
+                      color: isDark ? '#9CA3AF' : '#2D3748', 
                       fontSize: '13px',
                       margin: '8px 0',
                       fontFamily: 'JetBrains Mono, monospace'
@@ -106,7 +108,7 @@ const TasksTab = ({
                       {task.description.length > 100 ? `${task.description.substring(0, 100)}...` : task.description}
                     </p>
                   )}
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#6B7280' }}>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: isDark ? '#6B7280' : '#4A5568' }}>
                     {task.assigned_to_username && (
                       <span>Atanan: <strong style={{ color: '#00C896' }}>{task.assigned_to_username}</strong></span>
                     )}
@@ -128,7 +130,7 @@ const TasksTab = ({
                         border: '1px solid #2A2F38',
                         borderRadius: '4px',
                         padding: '6px 12px',
-                        color: '#9CA3AF',
+                        color: isDark ? '#9CA3AF' : '#2D3748',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -155,7 +157,7 @@ const TasksTab = ({
                         border: '1px solid #2A2F38',
                         borderRadius: '4px',
                         padding: '6px 12px',
-                        color: '#9CA3AF',
+                        color: isDark ? '#9CA3AF' : '#2D3748',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
