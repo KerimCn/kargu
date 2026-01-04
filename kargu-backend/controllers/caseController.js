@@ -34,7 +34,7 @@ class CaseController {
         return res.status(404).json({ error: 'Case not found' });
       }
 
-      // Mock data for now - bu veriler ileride gerçek verilerle değiştirilecek
+      // Mock data - ileride gerçek verilerle değiştirilecek
       const detailData = {
         case: caseData,
         machine: {
@@ -68,6 +68,112 @@ class CaseController {
           { id: 1, type: 'File Hash', value: 'a1b2c3d4e5f6...', threat_level: 'High', first_seen: '2024-01-10', source: 'VirusTotal' },
           { id: 2, type: 'IP Address', value: '185.220.101.45', threat_level: 'Critical', first_seen: '2024-01-12', source: 'ThreatFeed' },
           { id: 3, type: 'Domain', value: 'malicious-domain.com', threat_level: 'Medium', first_seen: '2024-01-14', source: 'AlienVault' }
+        ],
+        processTree: [
+          {
+            pid: 4,
+            name: 'System',
+            user: 'NT AUTHORITY\\SYSTEM',
+            startTime: '2024-01-15 09:00:00',
+            status: 'running',
+            suspicious: false,
+            children: [
+              {
+                pid: 584,
+                name: 'smss.exe',
+                user: 'NT AUTHORITY\\SYSTEM',
+                startTime: '2024-01-15 09:00:02',
+                status: 'running',
+                suspicious: false,
+                children: []
+              }
+            ]
+          },
+          {
+            pid: 720,
+            name: 'csrss.exe',
+            user: 'NT AUTHORITY\\SYSTEM',
+            startTime: '2024-01-15 09:00:05',
+            status: 'running',
+            suspicious: false,
+            children: []
+          },
+          {
+            pid: 1234,
+            name: 'explorer.exe',
+            user: 'CORPORATE\\john.doe',
+            startTime: '2024-01-15 09:05:23',
+            status: 'running',
+            suspicious: false,
+            children: [
+              {
+                pid: 2456,
+                name: 'chrome.exe',
+                user: 'CORPORATE\\john.doe',
+                startTime: '2024-01-15 09:15:10',
+                status: 'running',
+                suspicious: false,
+                children: [
+                  {
+                    pid: 2789,
+                    name: 'chrome.exe',
+                    user: 'CORPORATE\\john.doe',
+                    startTime: '2024-01-15 09:15:12',
+                    status: 'running',
+                    suspicious: false,
+                    children: []
+                  },
+                  {
+                    pid: 2801,
+                    name: 'chrome.exe',
+                    user: 'CORPORATE\\john.doe',
+                    startTime: '2024-01-15 09:15:13',
+                    status: 'running',
+                    suspicious: false,
+                    children: []
+                  }
+                ]
+              },
+              {
+                pid: 3456,
+                name: 'powershell.exe',
+                user: 'CORPORATE\\john.doe',
+                startTime: '2024-01-15 10:23:45',
+                status: 'terminated',
+                suspicious: true,
+                children: [
+                  {
+                    pid: 3678,
+                    name: 'malware.exe',
+                    user: 'CORPORATE\\john.doe',
+                    startTime: '2024-01-15 10:23:50',
+                    status: 'terminated',
+                    suspicious: true,
+                    children: [
+                      {
+                        pid: 3789,
+                        name: 'svchost.exe',
+                        user: 'CORPORATE\\john.doe',
+                        startTime: '2024-01-15 10:24:00',
+                        status: 'terminated',
+                        suspicious: true,
+                        children: []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                pid: 4567,
+                name: 'notepad.exe',
+                user: 'CORPORATE\\john.doe',
+                startTime: '2024-01-15 11:30:00',
+                status: 'running',
+                suspicious: false,
+                children: []
+              }
+            ]
+          }
         ]
       };
 
