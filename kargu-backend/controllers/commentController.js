@@ -25,6 +25,11 @@ class CommentController {
       const user_id = req.user.id;
       const username = req.user.username;
 
+      // Check if user role is 1 - they cannot add comments
+      if (req.user.role === '1') {
+        return res.status(403).json({ error: 'Bu işlem için yetkiniz yok.' });
+      }
+
       if (!comment || comment.trim() === '') {
         return res.status(400).json({ error: 'Yorum boş bırakılamaz.' });
       }

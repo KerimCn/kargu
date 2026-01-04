@@ -146,3 +146,45 @@ export const dashboardAPI = {
     return handleResponse(response);
   }
 };
+
+// Comment API
+export const commentAPI = {
+  getAll: async (caseId) => {
+    const response = await fetch(`${API_URL}/comments?case_id=${caseId}`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  create: async (caseId, comment) => {
+    const response = await fetch(`${API_URL}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({ case_id: caseId, comment })
+    });
+    return handleResponse(response);
+  },
+
+  update: async (id, comment) => {
+    const response = await fetch(`${API_URL}/comments/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({ comment })
+    });
+    return handleResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/comments/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  }
+};
