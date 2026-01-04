@@ -24,6 +24,21 @@ const initDB = async () => {
       )
     `);
 
+    // Cooments table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        user_id INT UNIQUE NOT NULL,
+        case_id INT NOT NULL,
+        comment TEXT NOT NULL,
+        visible BOOLEAN,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+
     // Roles Name table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS roles (
@@ -53,6 +68,7 @@ const initDB = async () => {
       'INSERT INTO roles (rolename) VALUES ($1), ($2), ($3), ($4)',
       ['Viewer','Investigator','Incident Responder', 'Admin']
     );
+
 
     // Create default admin user
     const bcrypt = require('bcryptjs');
