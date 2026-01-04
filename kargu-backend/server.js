@@ -19,29 +19,8 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Morgan logging middleware - detaylı request logging için
 app.use(morgan('dev'));
-
-app.use((req, res, next) => {
-  console.log('==============================');
-  console.log('➡️  REQUEST');
-  console.log('METHOD:', req.method);
-  console.log('URL:', req.originalUrl);
-
-  if (Object.keys(req.params || {}).length) {
-    console.log('PARAMS:', req.params);
-  }
-
-  if (Object.keys(req.query || {}).length) {
-    console.log('QUERY:', req.query);
-  }
-
-  if (Object.keys(req.body || {}).length) {
-    console.log('BODY:', req.body);
-  }
-
-  console.log('==============================');
-  next();
-});
 
 
 // Middleware

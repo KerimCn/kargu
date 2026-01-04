@@ -47,7 +47,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
       ]);
       setCases(casesData);
       setUsers(usersData);
-      applyFilter(casesData, statusFilter);
+      // applyFilter useEffect tarafından otomatik çağrılacak
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
