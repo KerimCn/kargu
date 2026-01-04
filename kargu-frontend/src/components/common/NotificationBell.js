@@ -12,11 +12,11 @@ const NotificationBell = ({ onNotificationClick }) => {
     fetchNotifications();
     fetchUnreadCount();
     
-    // Poll for new notifications every 30 seconds
+    // Poll for new notifications every 2 minutes
     const interval = setInterval(() => {
       fetchNotifications();
       fetchUnreadCount();
-    }, 30000);
+    }, 120000);
 
     return () => clearInterval(interval);
   }, []);
