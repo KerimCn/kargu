@@ -2,13 +2,13 @@ const { pool } = require('../config/database');
 
 class CommentModal {
 
-  static async getAllComments() {
+  static async getAllComments(id) {
     const result = await pool.query(
-      'SELECT id, username, user_id, case_id, comment, visible, created_at, updated_at FROM comment ORDER BY created_at DESC'
+      'SELECT id, username, user_id, case_id, comment, visible, created_at, updated_at FROM comment WHERE case_id = $1 ORDER BY created_at DESC',[id]
     );
     return result.rows;
   }
-
+  
   static async create(commentData) {
     const { username, user_id, case_id, comment, visible } = commentData;
     const result = await pool.query(
