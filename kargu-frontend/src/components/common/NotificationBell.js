@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X } from 'lucide-react';
 import { notificationAPI } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const NotificationBell = ({ onNotificationClick }) => {
+  const { isDark } = useTheme();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -140,14 +142,26 @@ const NotificationBell = ({ onNotificationClick }) => {
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'relative',
-          background: 'transparent',
-          border: 'none',
-          color: '#E0E6ED',
+          background: isDark ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 77, 77, 0.08)',
+          border: `1px solid ${isDark ? 'rgba(255, 77, 77, 0.2)' : 'rgba(255, 77, 77, 0.15)'}`,
+          borderRadius: '8px',
+          color: '#FF4D4D',
           cursor: 'pointer',
-          padding: '8px',
+          padding: '10px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          transition: 'all 0.2s ease',
+          width: '40px',
+          height: '40px'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = isDark ? 'rgba(255, 77, 77, 0.15)' : 'rgba(255, 77, 77, 0.12)';
+          e.currentTarget.style.transform = 'scale(1.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = isDark ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 77, 77, 0.08)';
+          e.currentTarget.style.transform = 'scale(1)';
         }}
       >
         <Bell size={22} />
@@ -181,33 +195,35 @@ const NotificationBell = ({ onNotificationClick }) => {
             position: 'absolute',
             top: '100%',
             right: 0,
-            marginTop: '8px',
+            marginTop: '12px',
             width: '380px',
             maxHeight: '500px',
-            background: '#1E2229',
-            border: '1px solid #2A2F38',
-            borderRadius: '4px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+            background: isDark ? '#1E2229' : '#FFFFFF',
+            border: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
+            borderRadius: '12px',
+            boxShadow: isDark ? '0 8px 24px rgba(0, 0, 0, 0.4)' : '0 8px 24px rgba(0, 0, 0, 0.12)',
             zIndex: 10000,
             overflow: 'hidden',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            transition: 'all 0.3s ease'
           }}
         >
           {/* Header */}
           <div
             style={{
               padding: '16px',
-              borderBottom: '1px solid #2A2F38',
+              borderBottom: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center'
+              alignItems: 'center',
+              background: isDark ? 'rgba(255, 77, 77, 0.02)' : 'rgba(255, 77, 77, 0.03)'
             }}
           >
             <h3
               style={{
                 fontFamily: 'Rajdhani, sans-serif',
-                color: '#E0E6ED',
+                color: isDark ? '#E0E6ED' : '#1A1F2E',
                 fontSize: '18px',
                 fontWeight: 700,
                 margin: 0
@@ -227,7 +243,15 @@ const NotificationBell = ({ onNotificationClick }) => {
                     fontSize: '12px',
                     fontFamily: 'Rajdhani, sans-serif',
                     fontWeight: 600,
-                    padding: '4px 8px'
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = isDark ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 77, 77, 0.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
                   }}
                 >
                   Tümünü okundu işaretle
@@ -238,12 +262,20 @@ const NotificationBell = ({ onNotificationClick }) => {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#E0E6ED',
+                  color: isDark ? '#E0E6ED' : '#4A5568',
                   cursor: 'pointer',
                   padding: '4px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = isDark ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 77, 77, 0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
                 }}
               >
                 <X size={18} />
@@ -263,7 +295,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                 style={{
                   padding: '32px',
                   textAlign: 'center',
-                  color: '#8B8E94',
+                  color: isDark ? '#8B8E94' : '#718096',
                   fontFamily: 'Rajdhani, sans-serif'
                 }}
               >
@@ -276,19 +308,20 @@ const NotificationBell = ({ onNotificationClick }) => {
                   onClick={() => handleNotificationClick(notification)}
                   style={{
                     padding: '16px',
-                    borderBottom: '1px solid #2A2F38',
+                    borderBottom: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
                     cursor: 'pointer',
-                    background: notification.read ? 'transparent' : 'rgba(255, 77, 77, 0.05)',
-                    transition: 'background 0.2s',
-                    ':hover': {
-                      background: 'rgba(255, 77, 77, 0.1)'
-                    }
+                    background: notification.read 
+                      ? 'transparent' 
+                      : (isDark ? 'rgba(255, 77, 77, 0.05)' : 'rgba(255, 77, 77, 0.04)'),
+                    transition: 'background 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 77, 77, 0.1)';
+                    e.currentTarget.style.background = isDark ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 77, 77, 0.08)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = notification.read ? 'transparent' : 'rgba(255, 77, 77, 0.05)';
+                    e.currentTarget.style.background = notification.read 
+                      ? 'transparent' 
+                      : (isDark ? 'rgba(255, 77, 77, 0.05)' : 'rgba(255, 77, 77, 0.04)');
                   }}
                 >
                   <div style={{ display: 'flex', gap: '12px' }}>
@@ -306,7 +339,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                         style={{
                           fontFamily: 'Rajdhani, sans-serif',
                           fontWeight: notification.read ? 500 : 700,
-                          color: '#E0E6ED',
+                          color: isDark ? '#E0E6ED' : '#1A1F2E',
                           fontSize: '14px',
                           marginBottom: '4px'
                         }}
@@ -316,7 +349,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                       <div
                         style={{
                           fontFamily: 'Rajdhani, sans-serif',
-                          color: '#8B8E94',
+                          color: isDark ? '#8B8E94' : '#718096',
                           fontSize: '12px',
                           marginBottom: '4px'
                         }}
@@ -326,7 +359,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                       <div
                         style={{
                           fontFamily: 'Rajdhani, sans-serif',
-                          color: '#6B7280',
+                          color: isDark ? '#6B7280' : '#A0AEC0',
                           fontSize: '11px'
                         }}
                       >

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/common/Navbar';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -43,7 +44,7 @@ const AppContent = () => {
       <div 
         style={{ 
           marginLeft: '80px',
-          paddingTop: '64px',
+          paddingTop: '72px',
           minHeight: '100vh',
           display: 'flex',
           justifyContent: 'center'
@@ -71,9 +72,11 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

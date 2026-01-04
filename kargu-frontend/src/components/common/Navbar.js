@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { RadioTower, LayoutDashboard, Users, LogOut, Menu, X, Radio, BookOpen } from 'lucide-react';
+import { RadioTower, LayoutDashboard, Users, LogOut, Menu, X, Radio, BookOpen, Sun, Moon } from 'lucide-react';
 import { IoBriefcaseOutline } from "react-icons/io5";
 import { GiBeastEye } from "react-icons/gi";
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import NotificationBell from './NotificationBell';
 
 const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [hoveredItem, setHoveredItem] = useState(null);
 
   const isAdmin = user?.role === '3' || user?.role === '4';
@@ -29,11 +31,12 @@ const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
           top: 0,
           width: '80px',
           height: '100vh',
-          background: '#1E2229',
-          borderRight: '1px solid #2A2F38',
+          background: isDark ? '#1E2229' : '#F8F9FA',
+          borderRight: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
           zIndex: 1000,
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          transition: 'background 0.3s ease, border-color 0.3s ease'
         }}
       >
         {/* Logo */}
@@ -43,7 +46,7 @@ const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
             justifyContent: 'center',
             alignItems: 'center',
             padding: '24px 0',
-            borderBottom: '1px solid #2A2F38'
+            borderBottom: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`
           }}
         >
           <RadioTower size={32} color="#FF4D4D" />
@@ -73,7 +76,7 @@ const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
                     padding: '16px 0',
                     background: isActive ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
                     borderLeft: isActive ? '4px solid #FF4D4D' : '4px solid transparent',
-                    color: isActive ? '#FF4D4D' : '#E0E6ED',
+                    color: isActive ? '#FF4D4D' : (isDark ? '#E0E6ED' : '#4A5568'),
                     border: 'none',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
@@ -90,18 +93,18 @@ const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
                       left: '85px',
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      background: '#1E2229',
+                      background: isDark ? '#1E2229' : '#FFFFFF',
                       border: '1px solid #FF4D4D',
                       borderRadius: '2px',
                       padding: '8px 16px',
                       whiteSpace: 'nowrap',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#1A1F2E',
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 600,
                       fontSize: '14px',
                       zIndex: 1001,
                       pointerEvents: 'none',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                      boxShadow: isDark ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.1)'
                     }}
                   >
                     {item.label}
@@ -115,8 +118,8 @@ const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
         {/* User Info & Logout - Bottom */}
         <div 
           style={{ 
-            borderTop: '1px solid #2A2F38',
-            background: '#1E2229',
+            borderTop: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
+            background: isDark ? '#1E2229' : '#F8F9FA',
             padding: '16px 0'
           }}
         >
@@ -171,28 +174,63 @@ const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
           top: 0,
           left: '80px',
           right: 0,
-          height: '64px',
-          background: '#0F1115',
-          borderBottom: '1px solid #2A2F38',
+          height: '72px',
+          background: isDark ? '#0F1115' : '#FFFFFF',
+          borderBottom: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px'
+          padding: '0 32px',
+          boxShadow: isDark ? '0 2px 8px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(0, 0, 0, 0.05)',
+          transition: 'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease'
         }}
       >
         <h2 
           style={{ 
             fontFamily: 'Rajdhani, sans-serif',
-            color: '#E0E6ED',
-            fontSize: '20px',
+            color: isDark ? '#E0E6ED' : '#1A1F2E',
+            fontSize: '22px',
             fontWeight: 700,
-            margin: 0
+            margin: 0,
+            letterSpacing: '0.5px',
+            transition: 'color 0.3s ease'
           }}
         >
           {menuItems.find(item => item.id === currentPage)?.label.toUpperCase()}
         </h2>
-        <NotificationBell onNotificationClick={onNotificationClick} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: isDark ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 77, 77, 0.08)',
+              border: `1px solid ${isDark ? 'rgba(255, 77, 77, 0.2)' : 'rgba(255, 77, 77, 0.15)'}`,
+              borderRadius: '8px',
+              color: '#FF4D4D',
+              cursor: 'pointer',
+              padding: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              width: '40px',
+              height: '40px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = isDark ? 'rgba(255, 77, 77, 0.15)' : 'rgba(255, 77, 77, 0.12)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = isDark ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 77, 77, 0.08)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title={isDark ? 'Light Mode\'a Geç' : 'Dark Mode\'a Geç'}
+          >
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <NotificationBell onNotificationClick={onNotificationClick} />
+        </div>
       </div>
     </>
   );
