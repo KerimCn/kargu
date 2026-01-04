@@ -24,17 +24,19 @@ const initDB = async () => {
       )
     `);
 
-    // Cooments table
+    // Comments table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        user_id INT UNIQUE NOT NULL,
+        username VARCHAR(50) NOT NULL,
+        user_id INT NOT NULL,
         case_id INT NOT NULL,
         comment TEXT NOT NULL,
-        visible BOOLEAN,
+        visible BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (case_id) REFERENCES cases(id)
       )
     `);
 
