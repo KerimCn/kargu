@@ -153,6 +153,16 @@ input:focus, textarea:focus, select:focus {
   color: #0F1115;
 }
 
+.badge-running {
+  background: #00C896;
+  color: #0F1115;
+}
+
+.badge-terminated {
+  background: #6B7280;
+  color: #E0E6ED;
+}
+
 .badge-resolved {
   background: #00C896;
   color: #0F1115;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Monitor, Clock, User, Server, Search } from 'lucide-react';
 import { caseAPI } from '../services/api';
+import ProcessTreeNode from '../components/cases/ProcessTreeNode';
 
 const CaseDetailPage = ({ caseId, onBack }) => {
   const [detailData, setDetailData] = useState(null);
@@ -39,7 +40,7 @@ const CaseDetailPage = ({ caseId, onBack }) => {
     );
   }
 
-  const { case: caseInfo, machine, data, tasks, playbooks, comments, ioc } = detailData;
+  const { case: caseInfo, machine, data, tasks, playbooks, comments, ioc, processTree } = detailData;
 
   const tabs = [
     { id: 'data', label: 'Data', icon: Server },
@@ -216,15 +217,82 @@ const CaseDetailPage = ({ caseId, onBack }) => {
 
       case 'process':
         return (
-          <div className="text-center py-12">
-            <Monitor size={64} color="#6B7280" style={{ margin: '0 auto 24px' }} />
-            <h3 
-              className="text-xl font-bold mb-2" 
-              style={{ fontFamily: 'Rajdhani, sans-serif', color: '#E0E6ED' }}
+          <div>
+            {/* Process Tree Header */}
+            <div className="mb-4 flex justify-between items-center">
+              <h3 
+                style={{ 
+                  fontFamily: 'Rajdhani, sans-serif',
+                  fontSize: '18px',
+                  fontWeight: 700,
+                  color: '#E0E6ED'
+                }}
+              >
+                PROCESS TREE
+              </h3>
+            </div>
+
+            {/* Process Tree View */}
+            <div 
+              style={{ 
+                background: '#0F1115',
+                border: '1px solid #2A2F38',
+                borderRadius: '4px',
+                padding: '16px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '13px',
+                overflowX: 'auto'
+              }}
             >
-              PROCESS TREE VIEW
-            </h3>
-            <p className="text-muted">Process tree visualization coming soon...</p>
+              {processTree && processTree.length > 0 ? (
+                processTree.map((process, index) => (
+                  <ProcessTreeNode
+                    key={process.pid}
+                    process={process}
+                    level={0}
+                    isLast={index === processTree.length - 1}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted">No process data available</p>
+                </div>
+              )}
+            </div>
+
+            {/* Legend */}
+            <div 
+              className="mt-4"
+              style={{ 
+                display: 'flex',
+                gap: '16px',
+                alignItems: 'center',
+                fontSize: '12px',
+                color: '#9CA3AF'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ 
+                  width: '12px', 
+                  height: '12px', 
+                  background: '#FF4D4D',
+                  borderRadius: '2px'
+                }} />
+                <span>Suspicious Process</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="badge badge-running" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                  RUNNING
+                </span>
+                <span>Active Process</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="badge badge-terminated" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                  TERMINATED
+                </span>
+                <span>Stopped Process</span>
+              </div>
+            </div>
           </div>
         );
 
