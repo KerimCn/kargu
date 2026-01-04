@@ -11,6 +11,10 @@ const caseRoutes = require('./routes/caseRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const commentRoutes = require('./routes/commentController');
 const taskRoutes = require('./routes/taskRoutes');
+const playbookRoutes = require('./routes/playbookRoutes');
+const casePlaybookRoutes = require('./routes/casePlaybookRoutes');
+const playbookExecutionRoutes = require('./routes/playbookExecutionRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -52,7 +56,15 @@ app.use('/api/cases', caseRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/playbooks', playbookRoutes);
+app.use('/api/case-playbooks', casePlaybookRoutes);
+app.use('/api/playbook-executions', playbookExecutionRoutes);
+app.use('/api/notifications', notificationRoutes);
 console.log('✓ Task routes loaded');
+console.log('✓ Playbook routes loaded');
+console.log('✓ Case playbook routes loaded');
+console.log('✓ Playbook execution routes loaded');
+console.log('✓ Notification routes loaded');
 
 // Health check
 app.get('/health', (req, res) => {

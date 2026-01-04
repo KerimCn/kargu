@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { RadioTower, LayoutDashboard, Users, LogOut, Menu, X, Radio } from 'lucide-react';
+import { RadioTower, LayoutDashboard, Users, LogOut, Menu, X, Radio, BookOpen } from 'lucide-react';
 import { IoBriefcaseOutline } from "react-icons/io5";
 import { GiBeastEye } from "react-icons/gi";
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
-const Navbar = ({ currentPage, setCurrentPage }) => {
+const Navbar = ({ currentPage, setCurrentPage, onNotificationClick }) => {
   const { user, logout } = useAuth();
   const [hoveredItem, setHoveredItem] = useState(null);
 
+  const isAdmin = user?.role === '3' || user?.role === '4';
+  
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'cases', label: 'Cases', icon: IoBriefcaseOutline },
     { id: 'falcon-eye', label: 'Falcon Eye', icon: GiBeastEye },
-   ...(user?.role === '4' ? [{ id: 'users', label: 'User Management', icon: Users }] : [])
+    ...(isAdmin ? [{ id: 'playbooks', label: 'Playbooks', icon: BookOpen }] : []),
+    ...(user?.role === '4' ? [{ id: 'users', label: 'User Management', icon: Users }] : [])
   ];
 
   return (
@@ -173,7 +177,8 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'space-between',
+          padding: '0 24px'
         }}
       >
         <h2 
@@ -187,6 +192,7 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
         >
           {menuItems.find(item => item.id === currentPage)?.label.toUpperCase()}
         </h2>
+        <NotificationBell onNotificationClick={onNotificationClick} />
       </div>
     </>
   );

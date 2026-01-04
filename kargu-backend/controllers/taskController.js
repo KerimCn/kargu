@@ -1,6 +1,7 @@
 const TaskModel = require('../models/taskModel');
 const CaseModel = require('../models/caseModel');
 const UserModel = require('../models/userModel');
+const NotificationService = require('../services/notificationService');
 
 class TaskController {
   static async getAllTasks(req, res) {
@@ -80,6 +81,15 @@ class TaskController {
         due_date,
         created_by
       });
+
+      // Create notification for case creator and assignee (excluding task creator)
+      await NotificationService.createNotificationForCaseUsers(
+        case_id,
+        'task_created',
+        'Yeni Task',
+        `"${name.trim()}" adlı yeni task oluşturuldu.`,
+        created_by
+      );
 
       res.status(201).json(task);
     } catch (err) {

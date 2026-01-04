@@ -1,28 +1,76 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Monitor, Clock, User, Server, Search, Edit2, Trash2, Send, X } from 'lucide-react';
-import { caseAPI, commentAPI } from '../services/api';
+import { ArrowLeft, Monitor, Clock, User, Server, Search, Lock, Send } from 'lucide-react';
+import { caseAPI, commentAPI, taskAPI, userAPI, playbookAPI, casePlaybookAPI, playbookExecutionAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import ProcessTreeNode from '../components/cases/ProcessTreeNode';
+import Modal from '../components/common/Modal';
+import DataTab from '../components/case-detail/DataTab';
+import TasksTab from '../components/case-detail/TasksTab';
+import PlaybooksTab from '../components/case-detail/PlaybooksTab';
+import CommentsTab from '../components/case-detail/CommentsTab';
+import IOCTab from '../components/case-detail/IOCTab';
+import ProcessTreeTab from '../components/case-detail/ProcessTreeTab';
 
-const CaseDetailPage = ({ caseId, onBack }) => {
+const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
   const { user } = useAuth();
   const [detailData, setDetailData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('data');
+  const [activeTab, setActiveTab] = useState(initialTab || 'data');
   const [searchTerm, setSearchTerm] = useState('');
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingCommentText, setEditingCommentText] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+  const [showCloseCaseModal, setShowCloseCaseModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [resolutionSummary, setResolutionSummary] = useState('');
+  const [newTask, setNewTask] = useState({
+    name: '',
+    description: '',
+    assigned_to: '',
+    priority: 'medium',
+    due_date: ''
+  });
+  const [casePlaybooks, setCasePlaybooks] = useState([]);
+  const [allPlaybooks, setAllPlaybooks] = useState([]);
+  const [showAddPlaybookModal, setShowAddPlaybookModal] = useState(false);
+  const [showPlaybookExecutionModal, setShowPlaybookExecutionModal] = useState(false);
+  const [selectedCasePlaybook, setSelectedCasePlaybook] = useState(null);
+  const [playbookExecution, setPlaybookExecution] = useState(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [stepStates, setStepStates] = useState([]);
+  const [stepComment, setStepComment] = useState('');
+  const [playbookExecutions, setPlaybookExecutions] = useState({});
+  const [expandedPlaybooks, setExpandedPlaybooks] = useState(new Set());
 
   useEffect(() => {
     fetchCaseDetail();
   }, [caseId]);
 
   useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  useEffect(() => {
     if (activeTab === 'comments' && caseId) {
       fetchComments();
+    }
+    if (activeTab === 'tasks' && caseId) {
+      fetchTasks();
+      fetchUsers();
+    }
+    if (activeTab === 'playbooks' && caseId) {
+      fetchCasePlaybooks();
+      fetchAllPlaybooks();
     }
   }, [activeTab, caseId]);
 
@@ -30,6 +78,11 @@ const CaseDetailPage = ({ caseId, onBack }) => {
     try {
       const data = await caseAPI.getDetail(caseId);
       setDetailData(data);
+      // Debug: Check if resolution_summary is in the data
+      if (data.case) {
+        console.log('Case data:', data.case);
+        console.log('Resolution summary:', data.case.resolution_summary);
+      }
     } catch (error) {
       console.error('Failed to fetch case detail:', error);
     } finally {
@@ -98,6 +151,251 @@ const CaseDetailPage = ({ caseId, onBack }) => {
     }
   };
 
+  const fetchTasks = async () => {
+    try {
+      setLoadingTasks(true);
+      const data = await taskAPI.getAll(caseId);
+      setTasks(data);
+    } catch (error) {
+      console.error('Failed to fetch tasks:', error);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const data = await userAPI.getAll();
+      setUsers(data);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
+
+  const fetchCasePlaybooks = async () => {
+    try {
+      const data = await casePlaybookAPI.getByCaseId(caseId);
+      setCasePlaybooks(data);
+      
+      // Fetch executions for all playbooks
+      const executions = {};
+      for (const cp of data) {
+        try {
+          const exec = await playbookExecutionAPI.getByCasePlaybookId(cp.id);
+          executions[cp.id] = exec;
+        } catch (error) {
+          console.error(`Failed to fetch execution for playbook ${cp.id}:`, error);
+        }
+      }
+      setPlaybookExecutions(executions);
+    } catch (error) {
+      console.error('Failed to fetch case playbooks:', error);
+    }
+  };
+
+  const fetchAllPlaybooks = async () => {
+    try {
+      const data = await playbookAPI.getAll();
+      setAllPlaybooks(data);
+    } catch (error) {
+      console.error('Failed to fetch all playbooks:', error);
+    }
+  };
+
+  const handleAddPlaybook = async (playbookId) => {
+    try {
+      await casePlaybookAPI.addToCase(caseId, playbookId);
+      setShowAddPlaybookModal(false);
+      fetchCasePlaybooks();
+    } catch (error) {
+      console.error('Failed to add playbook:', error);
+      alert(error.message || 'Playbook eklenirken bir hata oluştu.');
+    }
+  };
+
+  const handleRemovePlaybook = async (casePlaybookId) => {
+    if (!window.confirm('Bu playbook\'u case\'den kaldırmak istediğinize emin misiniz?')) return;
+    
+    try {
+      await casePlaybookAPI.removeFromCase(casePlaybookId);
+      fetchCasePlaybooks();
+    } catch (error) {
+      console.error('Failed to remove playbook:', error);
+      alert(error.message || 'Playbook kaldırılırken bir hata oluştu.');
+    }
+  };
+
+  const handleOpenPlaybookExecution = async (casePlaybook) => {
+    try {
+      setSelectedCasePlaybook(casePlaybook);
+      const execution = await playbookExecutionAPI.getByCasePlaybookId(casePlaybook.id);
+      setPlaybookExecution(execution);
+      setCurrentStepIndex(execution.current_step_index || 0);
+      setStepStates(execution.step_states || []);
+      
+      // Load step comment if exists
+      const currentStepState = (execution.step_states || [])[execution.current_step_index || 0];
+      setStepComment(currentStepState?.comment || '');
+      
+      setShowPlaybookExecutionModal(true);
+    } catch (error) {
+      console.error('Failed to fetch execution:', error);
+      alert('Playbook execution yüklenirken bir hata oluştu.');
+    }
+  };
+
+  const handleUpdateExecution = async () => {
+    try {
+      const updatedStepStates = [...stepStates];
+      if (!updatedStepStates[currentStepIndex]) {
+        updatedStepStates[currentStepIndex] = { checklist: [], comment: '' };
+      }
+      updatedStepStates[currentStepIndex].comment = stepComment;
+      
+      await playbookExecutionAPI.update(playbookExecution.id, {
+        current_step_index: currentStepIndex,
+        step_states: updatedStepStates
+      });
+      
+      setStepStates(updatedStepStates);
+    } catch (error) {
+      console.error('Failed to update execution:', error);
+      alert('Güncelleme sırasında bir hata oluştu.');
+    }
+  };
+
+  const handleChecklistToggle = async (itemIndex) => {
+    const updatedStepStates = [...stepStates];
+    if (!updatedStepStates[currentStepIndex]) {
+      updatedStepStates[currentStepIndex] = { checklist: [], comment: stepComment };
+    }
+    const checklist = [...(updatedStepStates[currentStepIndex].checklist || [])];
+    const index = checklist.indexOf(itemIndex);
+    if (index > -1) {
+      checklist.splice(index, 1);
+    } else {
+      checklist.push(itemIndex);
+    }
+    updatedStepStates[currentStepIndex] = {
+      ...updatedStepStates[currentStepIndex],
+      checklist: checklist,
+      comment: updatedStepStates[currentStepIndex].comment || stepComment
+    };
+    
+    // State'i hemen güncelle (UI için)
+    setStepStates(updatedStepStates);
+    
+    // Backend'e kaydet
+    if (playbookExecution) {
+      try {
+        await playbookExecutionAPI.update(playbookExecution.id, {
+          current_step_index: currentStepIndex,
+          step_states: updatedStepStates
+        });
+      } catch (error) {
+        console.error('Failed to update execution:', error);
+      }
+    }
+  };
+
+  const handleNextStep = async () => {
+    if (currentStepIndex < (selectedCasePlaybook?.steps?.length || 0) - 1) {
+      await handleUpdateExecution();
+      const newIndex = currentStepIndex + 1;
+      setCurrentStepIndex(newIndex);
+      const nextStepState = stepStates[newIndex];
+      setStepComment(nextStepState?.comment || '');
+    }
+  };
+
+  const handlePrevStep = async () => {
+    if (currentStepIndex > 0) {
+      await handleUpdateExecution();
+      const newIndex = currentStepIndex - 1;
+      setCurrentStepIndex(newIndex);
+      const prevStepState = stepStates[newIndex];
+      setStepComment(prevStepState?.comment || '');
+    }
+  };
+
+  const handleCreateTask = async () => {
+    if (!newTask.name.trim()) return;
+    
+    try {
+      await taskAPI.create({
+        case_id: caseId,
+        ...newTask,
+        assigned_to: newTask.assigned_to || null,
+        due_date: newTask.due_date || null
+      });
+      setShowCreateTaskModal(false);
+      setNewTask({ name: '', description: '', assigned_to: '', priority: 'medium', due_date: '' });
+      fetchTasks();
+    } catch (error) {
+      console.error('Failed to create task:', error);
+      alert(error.message || 'Task oluşturulurken bir hata oluştu.');
+    }
+  };
+
+  const handleTaskClick = async (task) => {
+    try {
+      const taskDetail = await taskAPI.getById(task.id);
+      setSelectedTask(taskDetail);
+      setShowTaskModal(true);
+    } catch (error) {
+      console.error('Failed to fetch task detail:', error);
+    }
+  };
+
+  const handleUpdateTaskStatus = async (taskId, status, result, comment) => {
+    try {
+      await taskAPI.update(taskId, { status, result, comment });
+      setShowTaskModal(false);
+      setSelectedTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      alert(error.message || 'Task güncellenirken bir hata oluştu.');
+    }
+  };
+
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setShowEditTaskModal(true);
+  };
+
+  const handleUpdateTask = async () => {
+    if (!editingTask.name.trim()) return;
+    
+    try {
+      await taskAPI.update(editingTask.id, {
+        name: editingTask.name,
+        description: editingTask.description,
+        assigned_to: editingTask.assigned_to || null,
+        priority: editingTask.priority,
+        due_date: editingTask.due_date || null
+      });
+      setShowEditTaskModal(false);
+      setEditingTask(null);
+      fetchTasks();
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      alert(error.message || 'Task güncellenirken bir hata oluştu.');
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('Bu task\'ı silmek istediğinize emin misiniz?')) return;
+    
+    try {
+      await taskAPI.delete(taskId);
+      fetchTasks();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      alert(error.message || 'Task silinirken bir hata oluştu.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-8">
@@ -114,7 +412,11 @@ const CaseDetailPage = ({ caseId, onBack }) => {
     );
   }
 
-  const { case: caseInfo, machine, data, tasks, playbooks, ioc, processTree } = detailData;
+  const { case: caseInfo, machine, data, playbooks, ioc, processTree } = detailData;
+  const isCaseOwner = user && caseInfo.assigned_to === user.id;
+  const isCaseCreator = user && caseInfo.created_by === user.id;
+  const isCaseResolved = caseInfo.status === 'resolved';
+  const canReopenCase = isCaseOwner || isCaseCreator;
 
   const tabs = [
     { id: 'data', label: 'Data', icon: Server },
@@ -125,507 +427,110 @@ const CaseDetailPage = ({ caseId, onBack }) => {
     { id: 'process', label: 'Process Tree', icon: Monitor }
   ];
 
-  const filterData = (items) => {
-    if (!searchTerm) return items;
-    return items.filter(item =>
-      Object.values(item).some(val =>
-        String(val).toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  };
-
-  const renderTable = (columns, data) => {
-    const filteredData = filterData(data);
-
-    return (
-      <div>
-        {/* Search Bar */}
-        <div className="mb-4 relative">
-          <Search 
-            size={18} 
-            style={{ 
-              position: 'absolute', 
-              left: '12px', 
-              top: '50%', 
-              transform: 'translateY(-50%)',
-              color: '#6B7280'
-            }} 
-          />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field"
-            style={{ paddingLeft: '40px' }}
-          />
-        </div>
-
-        {/* Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid #2A2F38' }}>
-                {columns.map(col => (
-                  <th 
-                    key={col.key}
-                    style={{ 
-                      padding: '12px',
-                      textAlign: 'left',
-                      color: '#E0E6ED',
-                      fontFamily: 'Rajdhani, sans-serif',
-                      fontWeight: 600,
-                      fontSize: '14px'
-                    }}
-                  >
-                    {col.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((row, idx) => (
-                <tr 
-                  key={idx}
-                  style={{ 
-                    borderBottom: '1px solid #2A2F38',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 77, 77, 0.05)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  {columns.map(col => (
-                    <td 
-                      key={col.key}
-                      style={{ 
-                        padding: '12px',
-                        color: '#9CA3AF',
-                        fontSize: '13px',
-                        fontFamily: 'JetBrains Mono, monospace'
-                      }}
-                    >
-                      {col.render ? col.render(row[col.key]) : row[col.key]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {filteredData.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted">No data found</p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'data':
-        return renderTable(
-          [
-            { key: 'timestamp', label: 'Timestamp' },
-            { key: 'event', label: 'Event' },
-            { key: 'path', label: 'Path' },
-            { key: 'status', label: 'Status', render: (val) => (
-              <span className={`badge badge-${val.toLowerCase()}`}>{val}</span>
-            )}
-          ],
-          data
+        return (
+          <DataTab 
+            data={data} 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+          />
         );
 
       case 'tasks':
-        return renderTable(
-          [
-            { key: 'name', label: 'Task Name' },
-            { key: 'assigned_to', label: 'Assigned To' },
-            { key: 'status', label: 'Status', render: (val) => (
-              <span className={`badge badge-${val.toLowerCase().replace(' ', '_')}`}>{val}</span>
-            )},
-            { key: 'priority', label: 'Priority' },
-            { key: 'due_date', label: 'Due Date' }
-          ],
-          tasks
+        return (
+          <TasksTab
+            isCaseOwner={isCaseOwner}
+            isCaseResolved={isCaseResolved}
+            tasks={tasks}
+            loadingTasks={loadingTasks}
+            users={users}
+            user={user}
+            newTask={newTask}
+            setNewTask={setNewTask}
+            editingTask={editingTask}
+            setEditingTask={setEditingTask}
+            showCreateTaskModal={showCreateTaskModal}
+            setShowCreateTaskModal={setShowCreateTaskModal}
+            showEditTaskModal={showEditTaskModal}
+            setShowEditTaskModal={setShowEditTaskModal}
+            showTaskModal={showTaskModal}
+            setShowTaskModal={setShowTaskModal}
+            selectedTask={selectedTask}
+            setSelectedTask={setSelectedTask}
+            handleCreateTask={handleCreateTask}
+            handleTaskClick={handleTaskClick}
+            handleEditTask={handleEditTask}
+            handleUpdateTask={handleUpdateTask}
+            handleDeleteTask={handleDeleteTask}
+            handleUpdateTaskStatus={handleUpdateTaskStatus}
+          />
         );
 
       case 'playbooks':
-        return renderTable(
-          [
-            { key: 'name', label: 'Playbook' },
-            { key: 'version', label: 'Version' },
-            { key: 'last_run', label: 'Last Run' },
-            { key: 'status', label: 'Status', render: (val) => (
-              <span className={`badge badge-${val.toLowerCase()}`}>{val}</span>
-            )},
-            { key: 'steps_completed', label: 'Progress' }
-          ],
-          playbooks
+        return (
+          <PlaybooksTab
+            isCaseOwner={isCaseOwner}
+            isCaseCreator={isCaseCreator}
+            casePlaybooks={casePlaybooks}
+            allPlaybooks={allPlaybooks}
+            playbookExecutions={playbookExecutions}
+            expandedPlaybooks={expandedPlaybooks}
+            setExpandedPlaybooks={setExpandedPlaybooks}
+            showAddPlaybookModal={showAddPlaybookModal}
+            setShowAddPlaybookModal={setShowAddPlaybookModal}
+            showPlaybookExecutionModal={showPlaybookExecutionModal}
+            setShowPlaybookExecutionModal={setShowPlaybookExecutionModal}
+            selectedCasePlaybook={selectedCasePlaybook}
+            playbookExecution={playbookExecution}
+            currentStepIndex={currentStepIndex}
+            stepStates={stepStates}
+            stepComment={stepComment}
+            setStepComment={setStepComment}
+            handleAddPlaybook={handleAddPlaybook}
+            handleRemovePlaybook={handleRemovePlaybook}
+            handleOpenPlaybookExecution={handleOpenPlaybookExecution}
+            handleUpdateExecution={handleUpdateExecution}
+            handleChecklistToggle={handleChecklistToggle}
+            handleNextStep={handleNextStep}
+            handlePrevStep={handlePrevStep}
+            fetchCasePlaybooks={fetchCasePlaybooks}
+          />
         );
 
       case 'comments':
         return (
-          <div>
-            {/* Add Comment Form - Only for users with role !== '1' */}
-            {user && user.role !== '1' && (
-              <div 
-                className="mb-6"
-                style={{
-                  background: '#0F1115',
-                  border: '1px solid #2A2F38',
-                  borderRadius: '4px',
-                  padding: '16px'
-                }}
-              >
-                <div className="mb-3">
-                  <label 
-                    style={{
-                      display: 'block',
-                      marginBottom: '8px',
-                      color: '#E0E6ED',
-                      fontFamily: 'Rajdhani, sans-serif',
-                      fontWeight: 600,
-                      fontSize: '14px'
-                    }}
-                  >
-                    Yeni Yorum Ekle
-                  </label>
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Yorumunuzu yazın..."
-                    rows={4}
-                    style={{
-                      width: '100%',
-                      background: '#1A1D24',
-                      border: '1px solid #2A2F38',
-                      borderRadius: '4px',
-                      padding: '12px',
-                      color: '#E0E6ED',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: '13px',
-                      resize: 'vertical'
-                    }}
-                  />
-                </div>
-                <button
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim()}
-                  className="btn btn-primary flex items-center gap-2"
-                  style={{
-                    opacity: !newComment.trim() ? 0.5 : 1,
-                    cursor: !newComment.trim() ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  <Send size={16} />
-                  Yorum Ekle
-                </button>
-              </div>
-            )}
-
-            {/* Comments List */}
-            {loadingComments ? (
-              <div className="text-center py-8">
-                <p className="text-muted">Yorumlar yükleniyor...</p>
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted">Henüz yorum yok</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    style={{
-                      background: '#0F1115',
-                      border: '1px solid #2A2F38',
-                      borderRadius: '4px',
-                      padding: '16px',
-                      transition: 'border-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#FF4D4D'}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#2A2F38'}
-                  >
-                    {/* Comment Header */}
-                    <div 
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        marginBottom: '12px'
-                      }}
-                    >
-                      <div>
-                        <div 
-                          style={{
-                            color: '#FF4D4D',
-                            fontFamily: 'Rajdhani, sans-serif',
-                            fontWeight: 700,
-                            fontSize: '14px',
-                            marginBottom: '4px'
-                          }}
-                        >
-                          {comment.username}
-                        </div>
-                        <div 
-                          style={{
-                            color: '#9CA3AF',
-                            fontFamily: 'JetBrains Mono, monospace',
-                            fontSize: '11px'
-                          }}
-                        >
-                          {new Date(comment.created_at).toLocaleString('tr-TR')}
-                          {comment.updated_at && comment.updated_at !== comment.created_at && (
-                            <span style={{ marginLeft: '8px', fontStyle: 'italic' }}>
-                              (düzenlendi)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Edit/Delete Buttons - Only for comment owner */}
-                      {user && user.id === comment.user_id && (
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          {editingCommentId === comment.id ? (
-                            <button
-                              onClick={handleCancelEdit}
-                              style={{
-                                background: 'transparent',
-                                border: '1px solid #2A2F38',
-                                borderRadius: '4px',
-                                padding: '6px 12px',
-                                color: '#9CA3AF',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                fontSize: '12px',
-                                transition: 'all 0.2s'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = '#9CA3AF';
-                                e.currentTarget.style.color = '#E0E6ED';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = '#2A2F38';
-                                e.currentTarget.style.color = '#9CA3AF';
-                              }}
-                            >
-                              <X size={14} />
-                              İptal
-                            </button>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => handleStartEdit(comment)}
-                                style={{
-                                  background: 'transparent',
-                                  border: '1px solid #2A2F38',
-                                  borderRadius: '4px',
-                                  padding: '6px 12px',
-                                  color: '#9CA3AF',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                  fontSize: '12px',
-                                  transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.borderColor = '#00C896';
-                                  e.currentTarget.style.color = '#00C896';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.borderColor = '#2A2F38';
-                                  e.currentTarget.style.color = '#9CA3AF';
-                                }}
-                              >
-                                <Edit2 size={14} />
-                                Düzenle
-                              </button>
-                              <button
-                                onClick={() => handleDeleteComment(comment.id)}
-                                style={{
-                                  background: 'transparent',
-                                  border: '1px solid #2A2F38',
-                                  borderRadius: '4px',
-                                  padding: '6px 12px',
-                                  color: '#9CA3AF',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                  fontSize: '12px',
-                                  transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.borderColor = '#FF4D4D';
-                                  e.currentTarget.style.color = '#FF4D4D';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.borderColor = '#2A2F38';
-                                  e.currentTarget.style.color = '#9CA3AF';
-                                }}
-                              >
-                                <Trash2 size={14} />
-                                Sil
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Comment Content */}
-                    {editingCommentId === comment.id ? (
-                      <div>
-                        <textarea
-                          value={editingCommentText}
-                          onChange={(e) => setEditingCommentText(e.target.value)}
-                          rows={4}
-                          style={{
-                            width: '100%',
-                            background: '#1A1D24',
-                            border: '1px solid #2A2F38',
-                            borderRadius: '4px',
-                            padding: '12px',
-                            color: '#E0E6ED',
-                            fontFamily: 'JetBrains Mono, monospace',
-                            fontSize: '13px',
-                            resize: 'vertical',
-                            marginBottom: '12px'
-                          }}
-                        />
-                        <button
-                          onClick={() => handleUpdateComment(comment.id)}
-                          disabled={!editingCommentText.trim()}
-                          className="btn btn-primary flex items-center gap-2"
-                          style={{
-                            opacity: !editingCommentText.trim() ? 0.5 : 1,
-                            cursor: !editingCommentText.trim() ? 'not-allowed' : 'pointer'
-                          }}
-                        >
-                          <Send size={16} />
-                          Güncelle
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          color: '#E0E6ED',
-                          fontFamily: 'JetBrains Mono, monospace',
-                          fontSize: '13px',
-                          lineHeight: '1.6',
-                          whiteSpace: 'pre-wrap',
-                          wordBreak: 'break-word'
-                        }}
-                      >
-                        {comment.comment}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <CommentsTab
+            user={user}
+            isCaseResolved={isCaseResolved}
+            comments={comments}
+            loadingComments={loadingComments}
+            newComment={newComment}
+            setNewComment={setNewComment}
+            editingCommentId={editingCommentId}
+            editingCommentText={editingCommentText}
+            setEditingCommentText={setEditingCommentText}
+            handleAddComment={handleAddComment}
+            handleStartEdit={handleStartEdit}
+            handleCancelEdit={handleCancelEdit}
+            handleUpdateComment={handleUpdateComment}
+            handleDeleteComment={handleDeleteComment}
+          />
         );
 
       case 'ioc':
-        return renderTable(
-          [
-            { key: 'type', label: 'Type' },
-            { key: 'value', label: 'Value' },
-            { key: 'threat_level', label: 'Threat Level', render: (val) => (
-              <span className={`badge badge-${val.toLowerCase()}`}>{val}</span>
-            )},
-            { key: 'first_seen', label: 'First Seen' },
-            { key: 'source', label: 'Source' }
-          ],
-          ioc
+        return (
+          <IOCTab 
+            ioc={ioc} 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+          />
         );
 
       case 'process':
         return (
-          <div>
-            {/* Process Tree Header */}
-            <div className="mb-4 flex justify-between items-center">
-              <h3 
-                style={{ 
-                  fontFamily: 'Rajdhani, sans-serif',
-                  fontSize: '18px',
-                  fontWeight: 700,
-                  color: '#E0E6ED'
-                }}
-              >
-                PROCESS TREE
-              </h3>
-            </div>
-
-            {/* Process Tree View */}
-            <div 
-              style={{ 
-                background: '#0F1115',
-                border: '1px solid #2A2F38',
-                borderRadius: '4px',
-                padding: '16px',
-                fontFamily: 'JetBrains Mono, monospace',
-                fontSize: '13px',
-                overflowX: 'auto'
-              }}
-            >
-              {processTree && processTree.length > 0 ? (
-                processTree.map((process, index) => (
-                  <ProcessTreeNode
-                    key={process.pid}
-                    process={process}
-                    level={0}
-                    isLast={index === processTree.length - 1}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted">No process data available</p>
-                </div>
-              )}
-            </div>
-
-            {/* Legend */}
-            <div 
-              className="mt-4"
-              style={{ 
-                display: 'flex',
-                gap: '16px',
-                alignItems: 'center',
-                fontSize: '12px',
-                color: '#9CA3AF'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ 
-                  width: '12px', 
-                  height: '12px', 
-                  background: '#FF4D4D',
-                  borderRadius: '2px'
-                }} />
-                <span>Suspicious Process</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="badge badge-running" style={{ fontSize: '10px', padding: '2px 6px' }}>
-                  RUNNING
-                </span>
-                <span>Active Process</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="badge badge-terminated" style={{ fontSize: '10px', padding: '2px 6px' }}>
-                  TERMINATED
-                </span>
-                <span>Stopped Process</span>
-              </div>
-            </div>
-          </div>
+          <ProcessTreeTab processTree={processTree} />
         );
 
       default:
@@ -645,13 +550,50 @@ const CaseDetailPage = ({ caseId, onBack }) => {
 
       {/* Case Header */}
       <div className="mb-6">
-        <h2 
-          className="text-3xl font-bold mb-2" 
-          style={{ fontFamily: 'Rajdhani, sans-serif' }}
-        >
-          {caseInfo.title}
-        </h2>
-        <p className="text-muted">{caseInfo.description}</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 
+              className="text-3xl font-bold mb-2" 
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
+              {caseInfo.title}
+            </h2>
+            <p className="text-muted">{caseInfo.description}</p>
+          </div>
+          {/* Case Action Buttons */}
+          <div className="flex gap-2">
+            {/* Close Case Button - Only for case creator or assignee when case is open */}
+            {!isCaseResolved && canReopenCase && (
+              <button
+                onClick={() => setShowCloseCaseModal(true)}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <Lock size={16} />
+                Case'i Kapat
+              </button>
+            )}
+            {/* Reopen Case Button - Only for case creator or assignee when case is resolved */}
+            {isCaseResolved && canReopenCase && (
+              <button
+                onClick={async () => {
+                  if (!window.confirm('Bu case\'i tekrar açmak istediğinize emin misiniz?')) return;
+                  try {
+                    await caseAPI.update(caseId, { status: 'open' });
+                    fetchCaseDetail();
+                    alert('Case başarıyla tekrar açıldı.');
+                  } catch (error) {
+                    console.error('Failed to reopen case:', error);
+                    alert(error.message || 'Case tekrar açılırken bir hata oluştu.');
+                  }
+                }}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <Send size={16} />
+                Case'i Tekrar Aç
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Machine Info Card */}
@@ -730,6 +672,41 @@ const CaseDetailPage = ({ caseId, onBack }) => {
         </div>
       </div>
 
+      {/* Resolution Summary Card - Only for resolved cases */}
+      {isCaseResolved && caseInfo.resolution_summary && (
+        <div 
+          className="card mb-6"
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(255, 77, 77, 0.1), rgba(0, 200, 150, 0.1))',
+            border: '1px solid #2A2F38'
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8" style={{ width: '100%' }}>
+              <div className="flex items-center gap-3">
+                <Clock size={128} color="#FF4D4D" />
+                <div>
+                  <div className="text-xs text-muted mb-1">Kapanış Özeti</div>
+                  <div 
+                    className="font-semibold" 
+                    style={{ 
+                      fontFamily: 'JetBrains Mono, monospace', 
+                      color: '#E0E6ED',
+                      fontSize: '13px',
+                      lineHeight: '1.6',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {caseInfo.resolution_summary}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tabbed Navigation */}
       <div className="card">
         <div 
@@ -768,6 +745,88 @@ const CaseDetailPage = ({ caseId, onBack }) => {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Close Case Modal */}
+      <Modal
+        isOpen={showCloseCaseModal}
+        onClose={() => {
+          setShowCloseCaseModal(false);
+          setResolutionSummary('');
+        }}
+        title="Case'i Kapat"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#E0E6ED', 
+              fontFamily: 'Rajdhani, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px'
+            }}>
+              Kapanış Özeti *
+            </label>
+            <textarea
+              value={resolutionSummary}
+              onChange={(e) => setResolutionSummary(e.target.value)}
+              rows={6}
+              className="input-field"
+              placeholder="Case'in neden kapatıldığını ve yapılan işlemleri özetleyin..."
+              style={{ 
+                fontFamily: 'JetBrains Mono, monospace', 
+                fontSize: '13px',
+                resize: 'vertical'
+              }}
+            />
+            <p style={{ 
+              color: '#9CA3AF', 
+              fontSize: '12px', 
+              marginTop: '4px',
+              fontStyle: 'italic'
+            }}>
+              Bu özet case detay sayfasında görüntülenecektir.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <button
+              onClick={() => {
+                setShowCloseCaseModal(false);
+                setResolutionSummary('');
+              }}
+              className="btn btn-secondary"
+            >
+              İptal
+            </button>
+            <button
+              onClick={async () => {
+                if (!resolutionSummary.trim()) {
+                  alert('Lütfen kapanış özeti girin.');
+                  return;
+                }
+                try {
+                  await caseAPI.update(caseId, { 
+                    status: 'resolved',
+                    resolution_summary: resolutionSummary.trim()
+                  });
+                  setShowCloseCaseModal(false);
+                  setResolutionSummary('');
+                  fetchCaseDetail();
+                  alert('Case başarıyla kapatıldı.');
+                } catch (error) {
+                  console.error('Failed to close case:', error);
+                  alert(error.message || 'Case kapatılırken bir hata oluştu.');
+                }
+              }}
+              disabled={!resolutionSummary.trim()}
+              className="btn btn-primary"
+              style={{ opacity: !resolutionSummary.trim() ? 0.5 : 1 }}
+            >
+              Case'i Kapat
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

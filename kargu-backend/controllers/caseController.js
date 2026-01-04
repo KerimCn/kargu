@@ -1,5 +1,6 @@
 const CaseModel = require('../models/caseModel');
 const TaskModel = require('../models/taskModel');
+const NotificationService = require('../services/notificationService');
 
 class CaseController {
   static async getAllCases(req, res) {
@@ -239,6 +240,32 @@ class CaseController {
 
       if (!caseData) {
         return res.status(404).json({ error: 'Case not found' });
+      }
+
+      // Create notifications for case status changes
+      if (req.body.status !== undefined) {
+        const oldStatus = existingCase.status;
+        const newStatus = req.body.status;
+        
+        if (oldStatus !== newStatus) {
+          if (newStatus === 'resolved') {
+            await NotificationService.createNotificationForCaseUsers(
+              req.params.id,
+              'case_closed',
+              'Case Kapatıldı',
+              `Case "${caseData.title}" kapatıldı.`,
+              userId
+            );
+          } else if (newStatus === 'open' && oldStatus === 'resolved') {
+            await NotificationService.createNotificationForCaseUsers(
+              req.params.id,
+              'case_reopened',
+              'Case Tekrar Açıldı',
+              `Case "${caseData.title}" tekrar açıldı.`,
+              userId
+            );
+          }
+        }
       }
 
       res.json(caseData);

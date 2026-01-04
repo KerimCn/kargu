@@ -1,6 +1,7 @@
 const commentModal = require('../models/commentModal');
 const CaseModel = require('../models/caseModel');
 const UserModel = require('../models/userModel');
+const NotificationService = require('../services/notificationService');
 
 class CommentController {
   static async getAllComments(req, res) {
@@ -62,6 +63,15 @@ class CommentController {
         comment: comment.trim(),
         visible: true
       });
+
+      // Create notification for case creator and assignee (excluding comment creator)
+      await NotificationService.createNotificationForCaseUsers(
+        case_id,
+        'comment',
+        'Yeni Yorum',
+        `${username} yorum ekledi: "${comment.trim().substring(0, 50)}${comment.trim().length > 50 ? '...' : ''}"`,
+        user_id
+      );
 
       res.status(201).json(createComment);
     } catch (err) {

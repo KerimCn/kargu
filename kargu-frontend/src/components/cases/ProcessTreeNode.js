@@ -22,9 +22,10 @@ const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = ''
         style={{
           display: 'flex',
           alignItems: 'center',
-          padding: '8px 0',
+          padding: '6px 8px',
           cursor: hasChildren ? 'pointer' : 'default',
-          transition: 'background 0.2s'
+          transition: 'background 0.2s',
+          borderRadius: '2px'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = process.suspicious 
@@ -40,9 +41,10 @@ const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = ''
         <span
           style={{
             color: '#6B7280',
-            marginRight: '8px',
+            marginRight: '6px',
             fontFamily: 'JetBrains Mono, monospace',
-            whiteSpace: 'pre'
+            whiteSpace: 'pre',
+            fontSize: '11px'
           }}
         >
           {parentPrefix}{treePrefix}
@@ -50,16 +52,16 @@ const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = ''
 
         {/* Expand/Collapse Icon */}
         {hasChildren && (
-          <span style={{ marginRight: '8px', color: '#9CA3AF' }}>
-            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <span style={{ marginRight: '6px', color: '#9CA3AF' }}>
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </span>
         )}
 
         {/* Suspicious Indicator */}
         {process.suspicious && (
           <AlertTriangle 
-            size={16} 
-            style={{ color: '#FF4D4D', marginRight: '8px' }} 
+            size={14} 
+            style={{ color: '#FF4D4D', marginRight: '6px' }} 
             title="Suspicious Process"
           />
         )}
@@ -67,10 +69,10 @@ const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = ''
         {/* Process Name */}
         <span
           style={{
-            fontWeight: 600,
+            fontWeight: process.suspicious ? 700 : 500,
             color: process.suspicious ? '#FF4D4D' : '#E0E6ED',
             marginRight: '12px',
-            minWidth: '150px'
+            fontSize: '12px'
           }}
         >
           {process.name}
@@ -81,43 +83,18 @@ const ProcessTreeNode = ({ process, level = 0, isLast = false, parentPrefix = ''
           style={{
             color: '#00C896',
             marginRight: '12px',
-            minWidth: '60px',
-            fontSize: '12px'
+            fontSize: '11px'
           }}
         >
-          PID: {process.pid}
-        </span>
-
-        {/* User */}
-        <span
-          style={{
-            color: '#9CA3AF',
-            marginRight: '12px',
-            fontSize: '12px',
-            minWidth: '180px'
-          }}
-        >
-          {process.user}
-        </span>
-
-        {/* Start Time */}
-        <span
-          style={{
-            color: '#6B7280',
-            marginRight: '12px',
-            fontSize: '12px',
-            minWidth: '100px'
-          }}
-        >
-          {process.startTime}
+          [{process.pid}]
         </span>
 
         {/* Status Badge */}
         <span
           className={`badge badge-${process.status}`}
           style={{
-            fontSize: '11px',
-            padding: '2px 8px'
+            fontSize: '10px',
+            padding: '2px 6px'
           }}
         >
           {process.status.toUpperCase()}

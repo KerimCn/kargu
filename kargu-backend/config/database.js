@@ -93,6 +93,56 @@ const initDB = async () => {
       )
     `);
 
+    // Playbooks table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS playbooks (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        steps JSONB DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Case Playbooks table (case-playbook ilişkisi)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS case_playbooks (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+        playbook_id INTEGER NOT NULL REFERENCES playbooks(id) ON DELETE CASCADE,
+        added_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(case_id, playbook_id)
+      )
+    `);
+
+    // Playbook Executions table (execution state, checklist, yorumlar)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS playbook_executions (
+        id SERIAL PRIMARY KEY,
+        case_playbook_id INTEGER NOT NULL REFERENCES case_playbooks(id) ON DELETE CASCADE,
+        current_step_index INTEGER DEFAULT 0,
+        step_states JSONB DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP
+      )
+    `);
+
+    // Notifications table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        case_id INTEGER REFERENCES cases(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT,
+        read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Creating Role Names
     await pool.query(`
       INSERT INTO roles (rolename)

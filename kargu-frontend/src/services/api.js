@@ -188,3 +188,194 @@ export const commentAPI = {
     return handleResponse(response);
   }
 };
+
+// Task API
+export const taskAPI = {
+  getAll: async (caseId) => {
+    const response = await fetch(`${API_URL}/tasks?case_id=${caseId}`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  getById: async (id) => {
+    const response = await fetch(`${API_URL}/tasks/${id}`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  create: async (taskData) => {
+    const response = await fetch(`${API_URL}/tasks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(taskData)
+    });
+    return handleResponse(response);
+  },
+
+  update: async (id, updates) => {
+    const response = await fetch(`${API_URL}/tasks/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(updates)
+    });
+    return handleResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/tasks/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  }
+};
+
+// Playbook API
+export const playbookAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_URL}/playbooks`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  getById: async (id) => {
+    const response = await fetch(`${API_URL}/playbooks/${id}`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  create: async (playbookData) => {
+    const response = await fetch(`${API_URL}/playbooks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(playbookData)
+    });
+    return handleResponse(response);
+  },
+
+  update: async (id, updates) => {
+    const response = await fetch(`${API_URL}/playbooks/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(updates)
+    });
+    return handleResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await fetch(`${API_URL}/playbooks/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  }
+};
+
+// Case Playbook API
+export const casePlaybookAPI = {
+  getByCaseId: async (caseId) => {
+    const response = await fetch(`${API_URL}/case-playbooks/case/${caseId}`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  addToCase: async (caseId, playbookId) => {
+    const response = await fetch(`${API_URL}/case-playbooks/case/${caseId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({ playbookId })
+    });
+    return handleResponse(response);
+  },
+
+  removeFromCase: async (id) => {
+    const response = await fetch(`${API_URL}/case-playbooks/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  }
+};
+
+// Playbook Execution API
+export const playbookExecutionAPI = {
+  getByCasePlaybookId: async (casePlaybookId) => {
+    const response = await fetch(`${API_URL}/playbook-executions/${casePlaybookId}`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  update: async (executionId, updates) => {
+    const response = await fetch(`${API_URL}/playbook-executions/${executionId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(updates)
+    });
+    return handleResponse(response);
+  },
+
+  complete: async (executionId) => {
+    const response = await fetch(`${API_URL}/playbook-executions/${executionId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  }
+};
+
+// Notification API
+export const notificationAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_URL}/notifications`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  getUnreadCount: async () => {
+    const response = await fetch(`${API_URL}/notifications/unread-count`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  markAsRead: async (id) => {
+    const response = await fetch(`${API_URL}/notifications/${id}/read`, {
+      method: 'PATCH',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  markAllAsRead: async () => {
+    const response = await fetch(`${API_URL}/notifications/read-all`, {
+      method: 'PATCH',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  }
+};

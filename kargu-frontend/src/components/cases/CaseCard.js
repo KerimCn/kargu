@@ -8,7 +8,14 @@ const CaseCard = ({ caseData, onUpdate, onDelete, onViewDetail, isAdmin }) => {
         <div style={{ flex: 1 }}>
           <h3 
             className="text-xl font-bold mb-2" 
-            style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            style={{ 
+              fontFamily: 'Rajdhani, sans-serif',
+              cursor: 'pointer',
+              transition: 'color 0.2s'
+            }}
+            onClick={() => onViewDetail(caseData.id)}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#FF4D4D'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#E0E6ED'}
           >
             {caseData.title}
           </h3>
