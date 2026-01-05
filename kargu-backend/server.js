@@ -22,9 +22,21 @@ const PORT = process.env.PORT || 5000;
 // Morgan logging middleware - detaylı request logging için
 app.use(morgan('dev'));
 
+// CORS configuration - hem localhost hem de production deployment için
+app.use(cors({
+  origin: [
+    'https://kargu.vercel.app',  // Vercel URL'inizi buraya
+    'http://localhost:3000',     // Local development
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Preflight requests için
+app.options('*', cors());
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
