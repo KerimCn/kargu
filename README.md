@@ -102,17 +102,19 @@ npm install
 
 ### 3. Backend Ortam Değişkenlerini Ayarlayın
 
-`kargu-backend` klasöründe `.env` dosyası oluşturun:
+`kargu-backend` klasöründe `.env` dosyası mevcuttur. Gerekirse kendi değerlerinizle güncelleyin:
 
 ```env
 PORT=5000
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=kargu_db
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-JWT_SECRET=your_jwt_secret_key
+DB_USER=postgres
+DB_PASSWORD=postgres
+JWT_SECRET=your_jwt_secret_key_change_this_in_production
 ```
+
+**Önemli:** Production ortamında `JWT_SECRET` değerini mutlaka güçlü bir değerle değiştirin!
 
 ### 4. Veritabanını Oluşturun
 
@@ -143,9 +145,9 @@ npm install
 
 ### 7. Frontend Ortam Değişkenlerini Ayarlayın
 
-`kargu-frontend` klasöründe `.env` dosyası oluşturun:
+`kargu-frontend` klasöründe `.env` dosyası mevcuttur. İhtiyacınıza göre güncelleyin:
 
-**Local Development için:**
+**Local Development için (varsayılan):**
 ```env
 REACT_APP_API_URL=http://localhost:5000/api
 ```
@@ -155,7 +157,17 @@ REACT_APP_API_URL=http://localhost:5000/api
 REACT_APP_API_URL=https://kargu.onrender.com/api
 ```
 
-**Not:** `.env` dosyası gitignore'da olduğu için repository'ye commit edilmez. Her ortam için kendi `.env` dosyanızı oluşturmanız gerekir.
+**Vercel Deployment için:**
+Vercel'de environment variable olarak ekleyin:
+1. Vercel Dashboard'a gidin
+2. Projenizi seçin
+3. Settings > Environment Variables bölümüne gidin
+4. Yeni variable ekleyin:
+   - **Name:** `REACT_APP_API_URL`
+   - **Value:** `https://kargu.onrender.com/api`
+5. Deploy'u yeniden yapın
+
+**Not:** `.env` dosyaları repository'de örnek değerlerle bulunmaktadır. Production ortamında mutlaka güvenli değerlerle güncelleyin!
 
 ### 8. Frontend'i Başlatın
 
