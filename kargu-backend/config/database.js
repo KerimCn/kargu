@@ -10,7 +10,7 @@ const pool = new Pool({
 
 const initDB = async () => {
   try {
-    // Users table
+    // Users table (must be created first)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -24,32 +24,15 @@ const initDB = async () => {
       )
     `);
 
-    // Comments table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS comments (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(50) NOT NULL,
-        user_id INT NOT NULL,
-        case_id INT NOT NULL,
-        comment TEXT NOT NULL,
-        visible BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (case_id) REFERENCES cases(id)
-      )
-    `);
-
-
     // Roles Name table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS roles (
-      id SERIAL PRIMARY KEY,
-      rolename VARCHAR(30) UNIQUE NOT NULL
-    )
+        id SERIAL PRIMARY KEY,
+        rolename VARCHAR(30) UNIQUE NOT NULL
+      )
     `);
 
-    // Cases table
+    // Cases table (must be created before comments, tasks, etc.)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS cases (
         id SERIAL PRIMARY KEY,
@@ -63,6 +46,22 @@ const initDB = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         resolved_at TIMESTAMP,
         resolution_summary TEXT
+      )
+    `);
+
+    // Comments table (depends on users and cases)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) NOT NULL,
+        user_id INT NOT NULL,
+        case_id INT NOT NULL,
+        comment TEXT NOT NULL,
+        visible BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (case_id) REFERENCES cases(id)
       )
     `);
 
