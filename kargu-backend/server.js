@@ -25,7 +25,7 @@ app.use(morgan('dev'));
 // CORS configuration - hem localhost hem de production deployment için
 app.use(cors({
   origin: [
-    'https://kargu.vercel.app',  // Vercel URL'inizi buraya
+    'https://kargu.vercel.app',  // Vercel frontend URL
     'http://localhost:3000',     // Local development
   ],
   credentials: true,

@@ -145,9 +145,17 @@ npm install
 
 `kargu-frontend` klasöründe `.env` dosyası oluşturun:
 
+**Local Development için:**
 ```env
 REACT_APP_API_URL=http://localhost:5000/api
 ```
+
+**Production (Render) için:**
+```env
+REACT_APP_API_URL=https://kargu.onrender.com/api
+```
+
+**Not:** `.env` dosyası gitignore'da olduğu için repository'ye commit edilmez. Her ortam için kendi `.env` dosyanızı oluşturmanız gerekir.
 
 ### 8. Frontend'i Başlatın
 

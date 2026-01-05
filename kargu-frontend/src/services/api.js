@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:5000/api';
+// API URL - environment variable'dan al, yoksa default olarak localhost kullan
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
