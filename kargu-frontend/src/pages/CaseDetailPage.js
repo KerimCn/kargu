@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Monitor, Clock, User, Server, Search, Lock, Send } from 'lucide-react';
+import { ArrowLeft, Monitor, Clock, User, Server, Search, Lock, Send, Edit } from 'lucide-react';
 import { caseAPI, commentAPI, taskAPI, userAPI, playbookAPI, casePlaybookAPI, playbookExecutionAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -31,8 +31,16 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [showCloseCaseModal, setShowCloseCaseModal] = useState(false);
+  const [showEditCaseModal, setShowEditCaseModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [resolutionSummary, setResolutionSummary] = useState('');
+  const [editCaseForm, setEditCaseForm] = useState({
+    title: '',
+    description: '',
+    severity: 'medium',
+    assigned_to: ''
+  });
+  const [allUsers, setAllUsers] = useState([]);
   const [newTask, setNewTask] = useState({
     name: '',
     description: '',
@@ -75,6 +83,19 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
       fetchAllPlaybooks();
     }
   }, [activeTab, caseId]);
+
+  useEffect(() => {
+    // Fetch all users for edit case modal
+    const fetchAllUsers = async () => {
+      try {
+        const data = await userAPI.getAll();
+        setAllUsers(data);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      }
+    };
+    fetchAllUsers();
+  }, []);
 
   const fetchCaseDetail = async () => {
     try {
@@ -420,6 +441,33 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
   const isCaseResolved = caseInfo.status === 'resolved';
   const canReopenCase = isCaseOwner || isCaseCreator;
 
+  const handleOpenEditCaseModal = () => {
+    setEditCaseForm({
+      title: caseInfo.title || '',
+      description: caseInfo.description || '',
+      severity: caseInfo.severity || 'medium',
+      assigned_to: caseInfo.assigned_to || ''
+    });
+    setShowEditCaseModal(true);
+  };
+
+  const handleUpdateCase = async () => {
+    if (!editCaseForm.title.trim()) {
+      alert('Lütfen case başlığı girin.');
+      return;
+    }
+
+    try {
+      await caseAPI.update(caseId, editCaseForm);
+      setShowEditCaseModal(false);
+      fetchCaseDetail();
+      alert('Case başarıyla güncellendi.');
+    } catch (error) {
+      console.error('Failed to update case:', error);
+      alert(error.message || 'Case güncellenirken bir hata oluştu.');
+    }
+  };
+
   const tabs = [
     { id: 'data', label: 'Data', icon: Server },
     { id: 'tasks', label: 'Tasks', icon: User },
@@ -564,6 +612,16 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
           </div>
           {/* Case Action Buttons */}
           <div className="flex gap-2">
+            {/* Edit Case Button - Only for case creator */}
+            {isCaseCreator && (
+              <button
+                onClick={handleOpenEditCaseModal}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <Edit size={16} />
+                Case'i Düzenle
+              </button>
+            )}
             {/* Close Case Button - Only for case creator or assignee when case is open */}
             {!isCaseResolved && canReopenCase && (
               <button
@@ -747,6 +805,122 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Edit Case Modal */}
+      <Modal
+        isOpen={showEditCaseModal}
+        onClose={() => {
+          setShowEditCaseModal(false);
+        }}
+        title="Case'i Düzenle"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#E0E6ED', 
+              fontFamily: 'Rajdhani, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px'
+            }}>
+              Başlık *
+            </label>
+            <input
+              type="text"
+              value={editCaseForm.title}
+              onChange={(e) => setEditCaseForm({ ...editCaseForm, title: e.target.value })}
+              className="input-field"
+              placeholder="Case başlığı"
+            />
+          </div>
+          
+          <div>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#E0E6ED', 
+              fontFamily: 'Rajdhani, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px'
+            }}>
+              Açıklama
+            </label>
+            <textarea
+              value={editCaseForm.description}
+              onChange={(e) => setEditCaseForm({ ...editCaseForm, description: e.target.value })}
+              className="input-field"
+              rows="3"
+              placeholder="Case açıklaması"
+            />
+          </div>
+          
+          <div>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#E0E6ED', 
+              fontFamily: 'Rajdhani, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px'
+            }}>
+              Önem Derecesi
+            </label>
+            <select
+              value={editCaseForm.severity}
+              onChange={(e) => setEditCaseForm({ ...editCaseForm, severity: e.target.value })}
+              className="input-field"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          
+          <div>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#E0E6ED', 
+              fontFamily: 'Rajdhani, sans-serif',
+              fontWeight: 600,
+              fontSize: '14px'
+            }}>
+              Atanan Kişi
+            </label>
+            <select
+              value={editCaseForm.assigned_to}
+              onChange={(e) => setEditCaseForm({ ...editCaseForm, assigned_to: e.target.value })}
+              className="input-field"
+            >
+              <option value="">Atanmamış</option>
+              {allUsers.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.full_name || u.username}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <button
+              onClick={() => setShowEditCaseModal(false)}
+              className="btn btn-secondary"
+            >
+              İptal
+            </button>
+            <button
+              onClick={handleUpdateCase}
+              disabled={!editCaseForm.title.trim()}
+              className="btn btn-primary"
+              style={{ opacity: !editCaseForm.title.trim() ? 0.5 : 1 }}
+            >
+              Güncelle
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Close Case Modal */}
       <Modal

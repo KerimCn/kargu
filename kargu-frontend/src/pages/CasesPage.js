@@ -106,17 +106,12 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
   };
 
   const handleUpdateCase = async (id, updates) => {
-    if (!adminControl) {
-      alert('Only admins can update cases');
-      return;
-    }
-
     try {
       await caseAPI.update(id, updates);
       fetchData();
     } catch (error) {
       console.error('Failed to update case:', error);
-      alert('Failed to update case');
+      alert(error.message || 'Failed to update case');
     }
   };
 
@@ -278,6 +273,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
           onDelete={handleDeleteCase}
           onViewDetail={handleViewDetail}
           isAdmin={isAdmin}
+          currentUserId={user?.id}
         />
       )}
 
