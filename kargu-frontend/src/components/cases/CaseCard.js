@@ -1,7 +1,8 @@
 import React from 'react';
-import { Check, Trash2, Lock, Eye } from 'lucide-react';
+import { Check, Trash2, Lock, Eye, Edit } from 'lucide-react';
 
-const CaseCard = ({ caseData, onUpdate, onDelete, onViewDetail, isAdmin }) => {
+const CaseCard = ({ caseData, onUpdate, onDelete, onViewDetail, isAdmin, currentUserId }) => {
+  const isCaseCreator = currentUserId && caseData.created_by === currentUserId;
   return (
     <div className="card">
       <div className="flex justify-between items-start">
@@ -43,30 +44,33 @@ const CaseCard = ({ caseData, onUpdate, onDelete, onViewDetail, isAdmin }) => {
             <Eye size={20} />
           </button>
 
-          {/* Admin Butonları */}
-         {(isAdmin === '3' || isAdmin === '4') && (
-          <>
-          {caseData.status !== 'resolved' && (
+          {/* Case Creator Butonları - Sadece case'i oluşturan kişi düzenleyebilir */}
+          {isCaseCreator && (
+            <>
+              {caseData.status !== 'resolved' && (
+                <button
+                  onClick={() => onUpdate(caseData.id, { status: 'resolved' })}
+                  className="p-2"
+                  style={{ color: '#00C896', background: 'transparent' }}
+                  title="Mark as Resolved"
+                >
+                  <Check size={20} />
+                </button>
+              )}
+            </>
+          )}
+
+          {/* Admin Butonları - Sadece admin silebilir */}
+          {(isAdmin === '3' || isAdmin === '4') && (
             <button
-              onClick={() => onUpdate(caseData.id, { status: 'resolved' })}
+              onClick={() => onDelete(caseData.id)}
               className="p-2"
-              style={{ color: '#00C896', background: 'transparent' }}
-              title="Mark as Resolved"
+              style={{ color: '#FF4D4D', background: 'transparent' }}
+              title="Delete Case"
             >
-              <Check size={20} />
+              <Trash2 size={20} />
             </button>
           )}
-          
-          <button
-            onClick={() => onDelete(caseData.id)}
-            className="p-2"
-            style={{ color: '#FF4D4D', background: 'transparent' }}
-            title="Delete Case"
-          >
-            <Trash2 size={20} />
-          </button>
-          </>
-        )}
         </div>
       </div>
       

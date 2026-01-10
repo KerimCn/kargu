@@ -219,9 +219,14 @@ class CaseController {
         return res.status(404).json({ error: 'Case not found' });
       }
 
+      // Check if user is the case creator - only creator can edit case
+      const isCaseCreator = existingCase.created_by === userId;
+      if (!isCaseCreator) {
+        return res.status(403).json({ error: 'Sadece case\'i oluşturan kişi case\'i düzenleyebilir.' });
+      }
+
       // If trying to reopen a resolved case, check permissions
       if (req.body.status === 'open' && existingCase.status === 'resolved') {
-        const isCaseCreator = existingCase.created_by === userId;
         const isCaseAssignee = existingCase.assigned_to === userId;
         
         if (!isCaseCreator && !isCaseAssignee) {

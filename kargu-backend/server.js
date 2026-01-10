@@ -23,7 +23,7 @@ const PORT = process.env.PORT || 5000;
 app.use(morgan('dev'));
 
 // CORS configuration - hem localhost hem de production deployment için
-app.use(cors({
+const corsOptions = {
   origin: [
     'https://kargu.vercel.app',  // Vercel frontend URL
     'http://localhost:3000',     // Local development
@@ -31,10 +31,12 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
 
-// Preflight requests için
-app.options('*', cors());
+app.use(cors(corsOptions));
+
+// Preflight requests için (aynı options ile)
+app.options('*', cors(corsOptions));
 
 // Middleware
 app.use(express.json());
