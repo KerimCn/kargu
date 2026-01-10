@@ -50,6 +50,15 @@ KARGU, siber güvenlik olaylarını yönetmek ve takip etmek için geliştirilmi
 - Kritik case'ler
 - Bugün çözülen case'ler
 
+### 🤖 AI-Powered Process Tree Analysis
+- OpenAI entegrasyonu ile process tree analizi
+- Güvenlik tehditleri ve anomali tespiti
+- Şüpheli process'lerin otomatik analizi
+- Risk skorlama ve önceliklendirme
+- MITRE ATT&CK framework referansları
+- AI özeti yenileme ve güncelleme
+- Database'de özet saklama (token tasarrufu)
+
 ### 👥 Kullanıcı Yönetimi
 - Kullanıcı oluşturma ve düzenleme
 - Kullanıcı listesi görüntüleme
@@ -78,6 +87,7 @@ KARGU, siber güvenlik olaylarını yönetmek ve takip etmek için geliştirilmi
 - **bcryptjs** - Şifre hashleme
 - **Morgan** - HTTP request logger
 - **CORS** - Cross-origin resource sharing
+- **OpenAI API** - AI-powered process tree analysis
 
 ## 📦 Kurulum
 
@@ -112,9 +122,13 @@ DB_NAME=kargu_db
 DB_USER=postgres
 DB_PASSWORD=postgres
 JWT_SECRET=your_jwt_secret_key_change_this_in_production
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-**Önemli:** Production ortamında `JWT_SECRET` değerini mutlaka güçlü bir değerle değiştirin!
+**Önemli:** 
+- Production ortamında `JWT_SECRET` değerini mutlaka güçlü bir değerle değiştirin!
+- `OPENAI_API_KEY` için [OpenAI Platform](https://platform.openai.com/api-keys) üzerinden API key oluşturun
+- `.env` dosyası `.gitignore` içinde olduğu için repository'ye push edilmez
 
 ### 4. Veritabanını Oluşturun
 
@@ -205,6 +219,21 @@ Frontend `http://localhost:3000` adresinde çalışacaktır.
 2. Mevcut playbook'ları görüntüleyin veya yeni bir playbook ekleyin
 3. Playbook'u çalıştırın ve adımları takip edin
 
+### AI Process Tree Analizi
+
+1. Case detay sayfasında **Process** sekmesine gidin
+2. Process tree verilerini görüntüleyin
+3. **AI Özet** bölümünde:
+   - Eğer özet yoksa **"AI'ya Sor"** butonuna tıklayın
+   - Mevcut özeti yenilemek için yenileme (🔄) ikonuna tıklayın
+4. AI analizi şunları içerir:
+   - Genel değerlendirme ve kritik bulgular
+   - Şüpheli process'ler ve risk seviyeleri
+   - Anormal davranış pattern'leri
+   - Acil aksiyon önerileri
+   - Derinlemesine araştırma önerileri
+   - Genel risk skoru (1-10)
+
 ## 📁 Proje Yapısı
 
 ```
@@ -278,6 +307,12 @@ kargu/
 - `GET /api/notifications/unread-count` - Okunmamış bildirim sayısı
 - `PUT /api/notifications/:id/read` - Bildirimi okundu işaretle
 - `PUT /api/notifications/read-all` - Tüm bildirimleri okundu işaretle
+
+### AI Analysis
+- `GET /api/ai/cases/:caseId/summary` - Case için AI özetini getir
+- `POST /api/ai/cases/:caseId/summary` - Process tree için yeni AI özeti oluştur
+  - Body: `{ "processTree": [...], "force": false }`
+  - `force: true` ile mevcut özeti yeniden oluşturur
 
 ## 🎨 Özellikler Detayı
 
