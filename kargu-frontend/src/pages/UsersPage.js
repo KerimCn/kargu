@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import CreateUserModal from '../components/users/CreateUserModal';
 import EditUserModal from '../components/users/EditUserModal';
-import { userAPI } from '../services/api';
+import { UserController } from '../controllers/userController';
 import { useTheme } from '../context/ThemeContext';
 
 const UsersPage = () => {
@@ -19,24 +19,24 @@ const UsersPage = () => {
   }, []);
 
   const fetchUsers = async () => {
-    try {
-      const data = await userAPI.getAll();
-      setUsers(data);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const result = await UserController.getAllUsers();
+    if (result.success) {
+      setUsers(result.data);
+    } else {
+      console.error('Failed to fetch users:', result.error);
+      alert(result.error || 'Failed to fetch users');
     }
+    setLoading(false);
   };
 
   const handleCreateUser = async (formData) => {
-    try {
-      await userAPI.create(formData);
+    const result = await UserController.createUser(formData);
+    if (result.success) {
       setShowModal(false);
       fetchUsers();
-    } catch (error) {
-      console.error('Failed to create user:', error);
-      alert('Failed to create user. Username or email may already exist.');
+    } else {
+      alert(result.error || 'Failed to create user. Username or email may already exist.');
     }
   };
 
@@ -46,40 +46,28 @@ const UsersPage = () => {
   };
 
   const handleUpdateUser = async (id, updatedData) => {
-    try {
-      await userAPI.update(id, updatedData);
+    const result = await UserController.updateUser(id, updatedData);
+    if (result.success) {
       setShowEditModal(false);
       setSelectedUser(null);
       fetchUsers();
-    } catch (error) {
-      console.error('Failed to update user:', error);
-      alert('Failed to update user');
+    } else {
+      alert(result.error || 'Failed to update user');
     }
   };
 
   const handleDeleteUser = async (id) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     
-    try {
-      await userAPI.delete(id);
+    const result = await UserController.deleteUser(id);
+    if (result.success) {
       fetchUsers();
-    } catch (error) {
-      console.error('Failed to delete user:', error);
-      alert('Failed to delete user');
+    } else {
+      alert(result.error || 'Failed to delete user');
     }
   };
 
-  const filterUsers = () => {
-    if (!searchTerm) return users;
-    return users.filter(user =>
-      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  };
-
-  const filteredUsers = filterUsers();
+  const filteredUsers = UserController.searchUsers(users, searchTerm);
 
   return (
     <div className="py-8">
@@ -111,7 +99,7 @@ const UsersPage = () => {
                 left: '12px', 
                 top: '50%', 
                 transform: 'translateY(-50%)',
-                color: isDark ? '#6B7280' : '#4A5568'
+                color: isDark ? '#6B7280' : '#404040'
               }} 
             />
             <input
@@ -133,7 +121,7 @@ const UsersPage = () => {
                     style={{ 
                       padding: '12px',
                       textAlign: 'left',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 600,
                       fontSize: '14px'
@@ -145,7 +133,7 @@ const UsersPage = () => {
                     style={{ 
                       padding: '12px',
                       textAlign: 'left',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 600,
                       fontSize: '14px'
@@ -157,7 +145,7 @@ const UsersPage = () => {
                     style={{ 
                       padding: '12px',
                       textAlign: 'left',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 600,
                       fontSize: '14px'
@@ -169,7 +157,7 @@ const UsersPage = () => {
                     style={{ 
                       padding: '12px',
                       textAlign: 'left',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 600,
                       fontSize: '14px'
@@ -181,7 +169,7 @@ const UsersPage = () => {
                     style={{ 
                       padding: '12px',
                       textAlign: 'left',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 600,
                       fontSize: '14px'
@@ -193,7 +181,7 @@ const UsersPage = () => {
                     style={{ 
                       padding: '12px',
                       textAlign: 'center',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 600,
                       fontSize: '14px'
@@ -217,7 +205,7 @@ const UsersPage = () => {
                     <td 
                       style={{ 
                         padding: '12px',
-                        color: '#E0E6ED',
+                        color: isDark ? '#E0E6ED' : '#000000',
                         fontSize: '13px',
                         fontFamily: 'JetBrains Mono, monospace',
                         fontWeight: 600
@@ -228,7 +216,7 @@ const UsersPage = () => {
                     <td 
                       style={{ 
                         padding: '12px',
-                        color: isDark ? '#9CA3AF' : '#2D3748',
+                        color: isDark ? '#9CA3AF' : '#1A1A1A',
                         fontSize: '13px',
                         fontFamily: 'Inter, sans-serif'
                       }}
@@ -238,7 +226,7 @@ const UsersPage = () => {
                     <td 
                       style={{ 
                         padding: '12px',
-                        color: isDark ? '#9CA3AF' : '#2D3748',
+                        color: isDark ? '#9CA3AF' : '#1A1A1A',
                         fontSize: '13px',
                         fontFamily: 'JetBrains Mono, monospace'
                       }}
@@ -253,7 +241,7 @@ const UsersPage = () => {
                     <td 
                       style={{ 
                         padding: '12px',
-                        color: isDark ? '#6B7280' : '#4A5568',
+                        color: isDark ? '#6B7280' : '#404040',
                         fontSize: '13px',
                         fontFamily: 'JetBrains Mono, monospace'
                       }}

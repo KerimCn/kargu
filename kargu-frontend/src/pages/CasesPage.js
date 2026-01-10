@@ -3,7 +3,8 @@ import { Plus } from 'lucide-react';
 import CaseList from '../components/cases/CaseList';
 import CreateCaseModal from '../components/cases/CreateCaseModal';
 import CaseDetailPage from './CaseDetailPage';
-import { caseAPI, userAPI } from '../services/api';
+import { CaseController } from '../controllers/caseController';
+import { UserController } from '../controllers/userController';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -19,12 +20,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'open', 'resolved'
 
   // Kullanıcının admin olup olmadığını kontrol et
-  const isAdmin = user?.role;
-  let adminControl = false;
-
-  if (isAdmin === '3' || isAdmin === '4'){
-    adminControl = true;
-  }
+  const adminControl = UserController.checkIsAdmin(user);
   
 
   useEffect(() => {
@@ -40,38 +36,31 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
   }, [selectedCaseId]);
 
   const fetchData = async () => {
-    try {
-      const [casesData, usersData] = await Promise.all([
-        caseAPI.getAll(),
-        userAPI.getAll()
-      ]);
-      setCases(casesData);
-      setUsers(usersData);
-      // applyFilter useEffect tarafından otomatik çağrılacak
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const [casesResult, usersResult] = await Promise.all([
+      CaseController.getAllCases(),
+      UserController.getAllUsers()
+    ]);
+    
+    if (casesResult.success) {
+      setCases(casesResult.data);
+    } else {
+      console.error('Failed to fetch cases:', casesResult.error);
+      alert(casesResult.error || 'Failed to fetch cases');
     }
-  };
-
-  const applyFilter = (casesData, filter) => {
-    let filtered = [];
-    switch (filter) {
-      case 'open':
-        filtered = casesData.filter(c => c.status !== 'resolved');
-        break;
-      case 'resolved':
-        filtered = casesData.filter(c => c.status === 'resolved');
-        break;
-      default:
-        filtered = casesData;
+    
+    if (usersResult.success) {
+      setUsers(usersResult.data);
+    } else {
+      console.error('Failed to fetch users:', usersResult.error);
     }
-    setFilteredCases(filtered);
+    
+    setLoading(false);
   };
 
   useEffect(() => {
-    applyFilter(cases, statusFilter);
+    const filtered = CaseController.filterCasesByStatus(cases, statusFilter);
+    setFilteredCases(filtered);
   }, [statusFilter, cases]);
 
   const handleViewDetail = (caseId) => {
@@ -89,29 +78,27 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
     fetchData();
   };
 
-  const handleCreateCase = async (formData) => {
+  const handleCreateCase = async (formData, file) => {
     if (!adminControl) {
       alert('Only admins can create cases');
       return;
     }
 
-    try {
-      await caseAPI.create(formData);
+    const result = await CaseController.createCase(formData, file);
+    if (result.success) {
       setShowModal(false);
       fetchData();
-    } catch (error) {
-      console.error('Failed to create case:', error);
-      alert('Failed to create case');
+    } else {
+      alert(result.error || 'Failed to create case');
     }
   };
 
   const handleUpdateCase = async (id, updates) => {
-    try {
-      await caseAPI.update(id, updates);
+    const result = await CaseController.updateCase(id, updates);
+    if (result.success) {
       fetchData();
-    } catch (error) {
-      console.error('Failed to update case:', error);
-      alert(error.message || 'Failed to update case');
+    } else {
+      alert(result.error || 'Failed to update case');
     }
   };
 
@@ -123,12 +110,11 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
 
     if (!window.confirm('Are you sure you want to delete this case?')) return;
     
-    try {
-      await caseAPI.delete(id);
+    const result = await CaseController.deleteCase(id);
+    if (result.success) {
       fetchData();
-    } catch (error) {
-      console.error('Failed to delete case:', error);
-      alert('Failed to delete case');
+    } else {
+      alert(result.error || 'Failed to delete case');
     }
   };
 
@@ -170,7 +156,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
         <div 
           className="flex gap-2"
           style={{
-            borderBottom: '1px solid #2A2F38',
+            borderBottom: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
             paddingBottom: '12px'
           }}
         >
@@ -181,7 +167,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
               background: statusFilter === 'all' ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
               border: statusFilter === 'all' ? '1px solid #FF4D4D' : '1px solid transparent',
               borderRadius: '4px',
-              color: statusFilter === 'all' ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#1A1F2E'),
+              color: statusFilter === 'all' ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#000000'),
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px',
@@ -197,7 +183,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
             onMouseLeave={(e) => {
               if (statusFilter !== 'all') {
                 e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#1A1F2E';
+                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#000000';
               }
             }}
           >
@@ -210,7 +196,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
               background: statusFilter === 'open' ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
               border: statusFilter === 'open' ? '1px solid #FF4D4D' : '1px solid transparent',
               borderRadius: '4px',
-              color: statusFilter === 'open' ? '#FF4D4D' : '#9CA3AF',
+              color: statusFilter === 'open' ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#404040'),
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px',
@@ -226,7 +212,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
             onMouseLeave={(e) => {
               if (statusFilter !== 'open') {
                 e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#1A1F2E';
+                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#000000';
               }
             }}
           >
@@ -239,7 +225,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
               background: statusFilter === 'resolved' ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
               border: statusFilter === 'resolved' ? '1px solid #FF4D4D' : '1px solid transparent',
               borderRadius: '4px',
-              color: statusFilter === 'resolved' ? '#FF4D4D' : '#9CA3AF',
+              color: statusFilter === 'resolved' ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#404040'),
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px',
@@ -255,7 +241,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
             onMouseLeave={(e) => {
               if (statusFilter !== 'resolved') {
                 e.currentTarget.style.borderColor = 'transparent';
-                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#1A1F2E';
+                e.currentTarget.style.color = isDark ? '#9CA3AF' : '#000000';
               }
             }}
           >
@@ -272,7 +258,7 @@ const CasesPage = ({ initialCaseId, onCaseViewChange, initialTab }) => {
           onUpdate={handleUpdateCase} 
           onDelete={handleDeleteCase}
           onViewDetail={handleViewDetail}
-          isAdmin={isAdmin}
+          isAdmin={user?.role}
           currentUserId={user?.id}
         />
       )}
