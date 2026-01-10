@@ -142,6 +142,18 @@ const initDB = async () => {
       )
     `);
 
+    // Case AI Summaries table (for storing OpenAI analysis results)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS case_ai_summaries (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+        summary TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(case_id)
+      )
+    `);
+
     // Creating Role Names
     await pool.query(`
       INSERT INTO roles (rolename)

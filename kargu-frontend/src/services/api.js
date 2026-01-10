@@ -380,3 +380,25 @@ export const notificationAPI = {
     return handleResponse(response);
   }
 };
+
+// AI API
+export const aiAPI = {
+  getSummary: async (caseId) => {
+    const response = await fetch(`${API_URL}/ai/cases/${caseId}/summary`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  generateSummary: async (caseId, processTree, force = false) => {
+    const response = await fetch(`${API_URL}/ai/cases/${caseId}/summary`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify({ processTree, force })
+    });
+    return handleResponse(response);
+  }
+};

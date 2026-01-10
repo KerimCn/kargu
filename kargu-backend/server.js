@@ -15,6 +15,7 @@ const playbookRoutes = require('./routes/playbookRoutes');
 const casePlaybookRoutes = require('./routes/casePlaybookRoutes');
 const playbookExecutionRoutes = require('./routes/playbookExecutionRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +54,7 @@ app.use('/api/playbooks', playbookRoutes);
 app.use('/api/case-playbooks', casePlaybookRoutes);
 app.use('/api/playbook-executions', playbookExecutionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
 console.log('✓ Task routes loaded');
 console.log('✓ Playbook routes loaded');
 console.log('✓ Case playbook routes loaded');

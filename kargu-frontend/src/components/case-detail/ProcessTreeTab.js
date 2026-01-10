@@ -1,8 +1,67 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ProcessTreeNode from '../cases/ProcessTreeNode';
-import { Clock } from 'lucide-react';
+import { Clock, RefreshCw } from 'lucide-react';
+import { aiAPI } from '../../services/api';
 
-const ProcessTreeTab = ({ processTree }) => {
+const ProcessTreeTab = ({ processTree, caseId }) => {
+  const [aiSummary, setAiSummary] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+  const [loadingGenerate, setLoadingGenerate] = useState(false);
+
+  useEffect(() => {
+    if (caseId) {
+      fetchAISummary();
+    }
+  }, [caseId]);
+
+  const fetchAISummary = async () => {
+    if (!caseId) return;
+    
+    try {
+      setLoadingSummary(true);
+      const response = await aiAPI.getSummary(caseId);
+      setAiSummary(response.summary);
+    } catch (error) {
+      console.error('Error fetching AI summary:', error);
+      setAiSummary(null);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  const handleAskAI = async () => {
+    if (!caseId || !processTree) return;
+
+    try {
+      setLoadingGenerate(true);
+      const response = await aiAPI.generateSummary(caseId, processTree);
+      setAiSummary(response.summary);
+    } catch (error) {
+      console.error('Error generating AI summary:', error);
+      alert('AI özeti oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoadingGenerate(false);
+    }
+  };
+
+  const handleRefreshAI = async () => {
+    if (!caseId || !processTree) return;
+
+    const confirmMessage = "AI Özet güncellenecek, güncelleme sonrasında token tasarrufu için databse'den çekilen mevcut özeti görüntüleyemeyeceksiniz. Yeni GPT isteğinden emin misiniz ?";
+    
+    if (window.confirm(confirmMessage)) {
+      try {
+        setLoadingGenerate(true);
+        const response = await aiAPI.generateSummary(caseId, processTree, true);
+        setAiSummary(response.summary);
+      } catch (error) {
+        console.error('Error refreshing AI summary:', error);
+        alert('AI özeti güncellenirken bir hata oluştu. Lütfen tekrar deneyin.');
+      } finally {
+        setLoadingGenerate(false);
+      }
+    }
+  };
 
   return (
     
@@ -16,22 +75,62 @@ const ProcessTreeTab = ({ processTree }) => {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8" style={{ width: '100%' }}>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3" style={{ width: '100%' }}>
                 <Clock size={16} color="#FF4D4D" />
-                <div>
-                  <div className="text-xs text-muted mb-1">AI Özet</div>
-                  <div 
-                    className="font-semibold" 
-                    style={{ 
-                      fontFamily: 'JetBrains Mono, monospace', 
-                      color: '#E0E6ED',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                    }}
-                  > AI için test class - burada ai'ya post edilen process tree'deki veri ai'ya incelettirilerek process tree'deki anomali tespiti sağlanacak.
+                <div style={{ flex: 1 }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted">AI Özet</span>
+                    {aiSummary && !loadingSummary && !loadingGenerate && (
+                      <RefreshCw 
+                        size={14} 
+                        color="#4A9EFF" 
+                        style={{ cursor: 'pointer' }}
+                        onClick={handleRefreshAI}
+                        title="AI Özeti Yenile"
+                      />
+                    )}
                   </div>
+                  {loadingSummary || loadingGenerate ? (
+                    <div 
+                      className="font-semibold" 
+                      style={{ 
+                        fontFamily: 'JetBrains Mono, monospace', 
+                        color: '#E0E6ED',
+                        fontSize: '13px',
+                        lineHeight: '1.6',
+                      }}
+                    >
+                      Yükleniyor...
+                    </div>
+                  ) : aiSummary ? (
+                    <div 
+                      className="font-semibold" 
+                      style={{ 
+                        fontFamily: 'JetBrains Mono, monospace', 
+                        color: '#E0E6ED',
+                        fontSize: '13px',
+                        lineHeight: '1.6',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {aiSummary}
+                    </div>
+                  ) : (
+                    <div
+                      onClick={handleAskAI}
+                      style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        color: '#4A9EFF',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        userSelect: 'none'
+                      }}
+                    >
+                      AI'ya Sor
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

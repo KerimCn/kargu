@@ -580,7 +580,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
 
       case 'process':
         return (
-          <ProcessTreeTab processTree={processTree} />
+          <ProcessTreeTab processTree={processTree} caseId={caseId} />
         );
 
       default:
