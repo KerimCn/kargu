@@ -26,16 +26,17 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Task Info */}
       <div style={{ 
-        background: '#0F1115', 
-        border: '1px solid #2A2F38', 
-        borderRadius: '4px', 
-        padding: '16px' 
+        background: isDark ? '#0F1115' : '#FFFFFF', 
+        border: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`, 
+        borderRadius: '8px', 
+        padding: '16px',
+        boxShadow: isDark ? '0 2px 8px rgba(0, 0, 0, 0.25)' : '0 1px 3px rgba(0, 0, 0, 0.08)'
       }}>
         <div style={{ marginBottom: '12px' }}>
           <label style={{ 
             display: 'block', 
             marginBottom: '4px', 
-            color: isDark ? '#9CA3AF' : '#2D3748', 
+            color: isDark ? '#9CA3AF' : '#404040', 
             fontSize: '12px',
             fontFamily: 'Rajdhani, sans-serif'
           }}>
@@ -51,14 +52,14 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '4px', 
-              color: isDark ? '#9CA3AF' : '#2D3748', 
+              color: isDark ? '#9CA3AF' : '#404040', 
               fontSize: '12px',
               fontFamily: 'Rajdhani, sans-serif'
             }}>
               Açıklama
             </label>
             <p style={{ 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#0F172A', 
               fontSize: '13px',
               fontFamily: 'JetBrains Mono, monospace',
               margin: 0
@@ -74,7 +75,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: isDark ? '#9CA3AF' : '#2D3748', 
+                color: isDark ? '#9CA3AF' : '#404040', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
@@ -96,7 +97,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: isDark ? '#9CA3AF' : '#2D3748', 
+                color: isDark ? '#9CA3AF' : '#404040', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
@@ -113,14 +114,14 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: isDark ? '#9CA3AF' : '#2D3748', 
+                color: isDark ? '#9CA3AF' : '#404040', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
                 Bitiş Tarihi
               </label>
               <p style={{ 
-                color: '#E0E6ED', 
+                color: isDark ? '#E0E6ED' : '#0F172A', 
                 fontSize: '13px',
                 fontFamily: 'JetBrains Mono, monospace',
                 margin: 0
@@ -135,14 +136,14 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
               <label style={{ 
                 display: 'block', 
                 marginBottom: '4px', 
-                color: isDark ? '#9CA3AF' : '#2D3748', 
+                color: isDark ? '#9CA3AF' : '#404040', 
                 fontSize: '12px',
                 fontFamily: 'Rajdhani, sans-serif'
               }}>
                 Oluşturulma
               </label>
               <p style={{ 
-                color: '#E0E6ED', 
+                color: isDark ? '#E0E6ED' : '#0F172A', 
                 fontSize: '13px',
                 fontFamily: 'JetBrains Mono, monospace',
                 margin: 0
@@ -154,18 +155,18 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
         </div>
 
         {task.comment && (
-          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #2A2F38' }}>
+          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}` }}>
             <label style={{ 
               display: 'block', 
               marginBottom: '4px', 
-              color: isDark ? '#9CA3AF' : '#2D3748', 
+              color: isDark ? '#9CA3AF' : '#404040', 
               fontSize: '12px',
               fontFamily: 'Rajdhani, sans-serif'
             }}>
               Yorum
             </label>
             <p style={{ 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#0F172A', 
               fontSize: '13px',
               fontFamily: 'JetBrains Mono, monospace',
               margin: 0,
@@ -181,7 +182,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '4px', 
-              color: isDark ? '#9CA3AF' : '#2D3748', 
+              color: isDark ? '#9CA3AF' : '#1A1A1A', 
               fontSize: '12px',
               fontFamily: 'Rajdhani, sans-serif'
             }}>
@@ -197,13 +198,14 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
       {/* Close Task Section - Only for task assignee */}
       {canClose && (
         <div style={{ 
-          background: '#0F1115', 
-          border: '1px solid #2A2F38', 
-          borderRadius: '4px', 
-          padding: '16px' 
+          background: isDark ? '#0F1115' : '#FFFFFF', 
+          border: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`, 
+          borderRadius: '8px', 
+          padding: '16px',
+          boxShadow: isDark ? '0 2px 8px rgba(0, 0, 0, 0.25)' : '0 1px 3px rgba(0, 0, 0, 0.08)'
         }}>
           <h4 style={{ 
-            color: '#E0E6ED', 
+            color: isDark ? '#E0E6ED' : '#0F172A', 
             fontFamily: 'Rajdhani, sans-serif',
             fontWeight: 700,
             fontSize: '14px',
@@ -216,7 +218,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '8px', 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#0F172A', 
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '13px'
@@ -230,9 +232,9 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
                   flex: 1,
                   padding: '12px',
                   background: result === 'completed' ? 'rgba(0, 200, 150, 0.2)' : 'transparent',
-                  border: `1px solid ${result === 'completed' ? '#00C896' : '#2A2F38'}`,
-                  borderRadius: '4px',
-                  color: result === 'completed' ? '#00C896' : '#9CA3AF',
+                  border: `1px solid ${result === 'completed' ? '#00C896' : (isDark ? '#2A2F38' : '#E2E8F0')}`,
+                  borderRadius: '6px',
+                  color: result === 'completed' ? '#00C896' : (isDark ? '#9CA3AF' : '#404040'),
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -252,9 +254,9 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
                   flex: 1,
                   padding: '12px',
                   background: result === 'failed' ? 'rgba(255, 77, 77, 0.2)' : 'transparent',
-                  border: `1px solid ${result === 'failed' ? '#FF4D4D' : '#2A2F38'}`,
-                  borderRadius: '4px',
-                  color: result === 'failed' ? '#FF4D4D' : '#9CA3AF',
+                  border: `1px solid ${result === 'failed' ? '#FF4D4D' : (isDark ? '#2A2F38' : '#E2E8F0')}`,
+                  borderRadius: '6px',
+                  color: result === 'failed' ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#404040'),
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -275,7 +277,7 @@ const TaskDetailModal = ({ task, user, isCaseOwner, onClose, onUpdate }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '8px', 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#0F172A', 
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '13px'

@@ -154,6 +154,43 @@ const initDB = async () => {
       )
     `);
 
+    // Case Forensic Files table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS case_forensic_files (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+        filename VARCHAR(255) NOT NULL,
+        filepath VARCHAR(500) NOT NULL,
+        file_type VARCHAR(10) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Case Network Connections table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS case_network_connections (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+        local_address VARCHAR(100),
+        remote_address VARCHAR(100),
+        protocol VARCHAR(10),
+        state VARCHAR(20),
+        process_name VARCHAR(255),
+        pid INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Case Process Trees table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS case_process_trees (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+        process_data JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Creating Role Names
     await pool.query(`
       INSERT INTO roles (rolename)

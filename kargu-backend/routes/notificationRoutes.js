@@ -10,3 +10,4 @@ router.patch('/read-all', authenticateToken, NotificationController.markAllAsRea
 
 module.exports = router;
 
+

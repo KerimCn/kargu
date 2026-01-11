@@ -2,7 +2,9 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
-export const renderTable = (columns, data, searchTerm, setSearchTerm) => {
+const RenderTable = ({ columns, data, searchTerm, setSearchTerm }) => {
+  const { isDark } = useTheme();
+  
   const filterData = (items) => {
     if (!searchTerm) return items;
     return items.filter(item =>
@@ -49,7 +51,7 @@ export const renderTable = (columns, data, searchTerm, setSearchTerm) => {
                   style={{ 
                     padding: '12px',
                     textAlign: 'left',
-                    color: '#E0E6ED',
+                    color: isDark ? '#E0E6ED' : '#000000',
                     fontFamily: 'Rajdhani, sans-serif',
                     fontWeight: 600,
                     fontSize: '14px'
@@ -99,3 +101,5 @@ export const renderTable = (columns, data, searchTerm, setSearchTerm) => {
   );
 };
 
+export { RenderTable };
+export default RenderTable;

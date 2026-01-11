@@ -359,7 +359,7 @@ const NotificationBell = ({ onNotificationClick }) => {
                       <div
                         style={{
                           fontFamily: 'Rajdhani, sans-serif',
-                          color: isDark ? '#6B7280' : '#4A5568',
+                          color: isDark ? '#6B7280' : '#404040',
                           fontSize: '11px'
                         }}
                       >

@@ -208,7 +208,7 @@ const PlaybooksPage = () => {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h3 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '24px', fontWeight: 700, color: '#E0E6ED' }}>
+          <h3 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '24px', fontWeight: 700, color: isDark ? '#E0E6ED' : '#000000' }}>
             {isEdit ? 'Playbook Düzenle' : 'Yeni Playbook Oluştur'}
           </h3>
           <button
@@ -223,7 +223,7 @@ const PlaybooksPage = () => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: isDark ? '#9CA3AF' : '#2D3748',
+              color: isDark ? '#9CA3AF' : '#1A1A1A',
               cursor: 'pointer',
               padding: '4px'
             }}
@@ -233,7 +233,7 @@ const PlaybooksPage = () => {
         </div>
 
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', color: '#E0E6ED', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: isDark ? '#E0E6ED' : '#000000', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>
             Playbook Adı *
           </label>
           <input
@@ -246,7 +246,7 @@ const PlaybooksPage = () => {
               background: '#0F1115',
               border: '1px solid #2A2F38',
               borderRadius: '4px',
-              color: '#E0E6ED',
+              color: isDark ? '#E0E6ED' : '#000000',
               fontFamily: 'Rajdhani, sans-serif'
             }}
             placeholder="Playbook adını girin"
@@ -255,7 +255,7 @@ const PlaybooksPage = () => {
 
         <div style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <label style={{ color: '#E0E6ED', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>
+            <label style={{ color: isDark ? '#E0E6ED' : '#000000', fontFamily: 'Rajdhani, sans-serif', fontWeight: 600 }}>
               Adımlar
             </label>
             <button
@@ -322,7 +322,7 @@ const PlaybooksPage = () => {
                     background: '#1E2229',
                     border: '1px solid #2A2F38',
                     borderRadius: '4px',
-                    color: '#E0E6ED',
+                    color: isDark ? '#E0E6ED' : '#000000',
                     fontFamily: 'Rajdhani, sans-serif'
                   }}
                   placeholder="Adım başlığı"
@@ -342,7 +342,7 @@ const PlaybooksPage = () => {
                     background: '#1E2229',
                     border: '1px solid #2A2F38',
                     borderRadius: '4px',
-                    color: '#E0E6ED',
+                    color: isDark ? '#E0E6ED' : '#000000',
                     fontFamily: 'Rajdhani, sans-serif',
                     minHeight: '80px',
                     resize: 'vertical'
@@ -388,7 +388,7 @@ const PlaybooksPage = () => {
                         background: '#1E2229',
                         border: '1px solid #2A2F38',
                         borderRadius: '4px',
-                        color: '#E0E6ED',
+                        color: isDark ? '#E0E6ED' : '#000000',
                         fontFamily: 'Rajdhani, sans-serif',
                         fontSize: '13px'
                       }}
@@ -428,7 +428,7 @@ const PlaybooksPage = () => {
               background: 'transparent',
               border: '1px solid #2A2F38',
               borderRadius: '4px',
-              color: isDark ? '#9CA3AF' : '#2D3748',
+              color: isDark ? '#9CA3AF' : '#1A1A1A',
               cursor: 'pointer',
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600
@@ -536,14 +536,14 @@ const PlaybooksPage = () => {
                         fontFamily: 'Rajdhani, sans-serif', 
                         fontSize: '18px', 
                         fontWeight: 700, 
-                        color: '#E0E6ED', 
+                        color: isDark ? '#E0E6ED' : '#000000', 
                         marginBottom: '4px',
                         margin: 0
                       }}>
                         {playbook.name}
                       </h3>
                       <p style={{ 
-                        color: isDark ? '#9CA3AF' : '#2D3748', 
+                        color: isDark ? '#9CA3AF' : '#1A1A1A', 
                         fontSize: '13px', 
                         fontFamily: 'Rajdhani, sans-serif',
                         margin: 0
@@ -634,7 +634,7 @@ const PlaybooksPage = () => {
                             </h4>
                             {step.description && (
                               <p style={{ 
-                                color: isDark ? '#9CA3AF' : '#2D3748', 
+                                color: isDark ? '#9CA3AF' : '#1A1A1A', 
                                 fontSize: '14px', 
                                 marginBottom: step.checklist && step.checklist.length > 0 ? '12px' : '0',
                                 fontFamily: 'Rajdhani, sans-serif',
@@ -646,7 +646,7 @@ const PlaybooksPage = () => {
                             {step.checklist && step.checklist.length > 0 && (
                               <div style={{ marginTop: step.description ? '12px' : '0' }}>
                                 <p style={{ 
-                                  color: '#E0E6ED', 
+                                  color: isDark ? '#E0E6ED' : '#000000', 
                                   fontSize: '13px', 
                                   fontFamily: 'Rajdhani, sans-serif',
                                   fontWeight: 600,
@@ -657,7 +657,7 @@ const PlaybooksPage = () => {
                                 <ul style={{ 
                                   margin: 0, 
                                   paddingLeft: '20px', 
-                                  color: '#E0E6ED', 
+                                  color: isDark ? '#E0E6ED' : '#000000', 
                                   fontSize: '13px', 
                                   fontFamily: 'Rajdhani, sans-serif',
                                   lineHeight: '1.8'
@@ -675,7 +675,7 @@ const PlaybooksPage = () => {
                       </div>
                     ) : (
                       <p style={{ 
-                        color: isDark ? '#9CA3AF' : '#2D3748', 
+                        color: isDark ? '#9CA3AF' : '#1A1A1A', 
                         fontSize: '14px', 
                         fontFamily: 'Rajdhani, sans-serif',
                         textAlign: 'center',

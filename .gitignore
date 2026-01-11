@@ -19,6 +19,10 @@
 .env.test.local
 .env.production.local
 
+# backend specific
+kargu-backend/.env
+kargu-backend/upload/
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

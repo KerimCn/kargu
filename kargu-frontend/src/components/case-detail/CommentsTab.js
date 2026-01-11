@@ -37,7 +37,7 @@ const CommentsTab = ({
               style={{
                 display: 'block',
                 marginBottom: '8px',
-                color: '#E0E6ED',
+                color: isDark ? '#E0E6ED' : '#000000',
                 fontFamily: 'Rajdhani, sans-serif',
                 fontWeight: 600,
                 fontSize: '14px'
@@ -56,7 +56,7 @@ const CommentsTab = ({
                 border: '1px solid #2A2F38',
                 borderRadius: '4px',
                 padding: '12px',
-                color: '#E0E6ED',
+                color: isDark ? '#E0E6ED' : '#000000',
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: '13px',
                 resize: 'vertical'
@@ -125,7 +125,7 @@ const CommentsTab = ({
                   </div>
                   <div 
                     style={{
-                      color: isDark ? '#9CA3AF' : '#2D3748',
+                      color: isDark ? '#9CA3AF' : '#1A1A1A',
                       fontFamily: 'JetBrains Mono, monospace',
                       fontSize: '11px'
                     }}
@@ -150,7 +150,7 @@ const CommentsTab = ({
                           border: '1px solid #2A2F38',
                           borderRadius: '4px',
                           padding: '6px 12px',
-                          color: isDark ? '#9CA3AF' : '#2D3748',
+                          color: isDark ? '#9CA3AF' : '#1A1A1A',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -179,7 +179,7 @@ const CommentsTab = ({
                             border: '1px solid #2A2F38',
                             borderRadius: '4px',
                             padding: '6px 12px',
-                            color: isDark ? '#9CA3AF' : '#2D3748',
+                            color: isDark ? '#9CA3AF' : '#1A1A1A',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -206,7 +206,7 @@ const CommentsTab = ({
                             border: '1px solid #2A2F38',
                             borderRadius: '4px',
                             padding: '6px 12px',
-                            color: isDark ? '#9CA3AF' : '#2D3748',
+                            color: isDark ? '#9CA3AF' : '#1A1A1A',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -245,7 +245,7 @@ const CommentsTab = ({
                       border: '1px solid #2A2F38',
                       borderRadius: '4px',
                       padding: '12px',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontFamily: 'JetBrains Mono, monospace',
                       fontSize: '13px',
                       resize: 'vertical',
@@ -268,7 +268,7 @@ const CommentsTab = ({
               ) : (
                 <div
                   style={{
-                    color: '#E0E6ED',
+                    color: isDark ? '#E0E6ED' : '#000000',
                     fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '13px',
                     lineHeight: '1.6',

@@ -90,6 +90,37 @@ class UserController {
       res.status(500).json({ error: 'Server error' });
     }
   }
+
+  static async updateProfile(req, res) {
+    try {
+      const userId = req.user.id;
+      const updates = {};
+
+      // Only allow updating full_name and password
+      // Username, email, and role cannot be changed
+      if (req.body.full_name !== undefined) {
+        updates.full_name = req.body.full_name;
+      }
+      if (req.body.password) {
+        updates.password = await bcrypt.hash(req.body.password, 10);
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: 'No valid fields to update' });
+      }
+
+      const user = await UserModel.update(userId, updates);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json(user);
+    } catch (err) {
+      console.error('Update profile error:', err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
 }
 
 module.exports = UserController;

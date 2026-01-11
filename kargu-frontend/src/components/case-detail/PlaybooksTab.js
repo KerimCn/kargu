@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 const PlaybooksTab = ({
   isCaseOwner,
   isCaseCreator,
+  canManagePlaybooks,
   casePlaybooks,
   allPlaybooks,
   playbookExecutions,
@@ -31,36 +32,11 @@ const PlaybooksTab = ({
   fetchCasePlaybooks
 }) => {
   const { isDark } = useTheme();
-  const canManagePlaybooks = isCaseOwner || isCaseCreator;
 
   return (
     <div>
-      {canManagePlaybooks && (
-        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'flex-end' }}>
-          <button
-            onClick={() => setShowAddPlaybookModal(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 20px',
-              background: 'rgba(255, 77, 77, 0.1)',
-              border: '1px solid #FF4D4D',
-              borderRadius: '4px',
-              color: '#FF4D4D',
-              cursor: 'pointer',
-              fontFamily: 'Rajdhani, sans-serif',
-              fontWeight: 600,
-              fontSize: '14px'
-            }}
-          >
-            <Plus size={18} /> Playbook Ekle
-          </button>
-        </div>
-      )}
-      
       {casePlaybooks.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#9CA3AF' : '#2D3748' }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: isDark ? '#9CA3AF' : '#1A1A1A' }}>
           <p>Bu case'e henüz playbook eklenmemiş.</p>
         </div>
       ) : (
@@ -91,7 +67,7 @@ const PlaybooksTab = ({
                       fontFamily: 'Rajdhani, sans-serif', 
                       fontSize: '18px', 
                       fontWeight: 700, 
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       marginBottom: '4px'
                     }}>
                       {cp.name}
@@ -107,7 +83,7 @@ const PlaybooksTab = ({
                       )}
                     </h3>
                     <p style={{ 
-                      color: isDark ? '#9CA3AF' : '#2D3748', 
+                      color: isDark ? '#9CA3AF' : '#1A1A1A', 
                       fontSize: '13px',
                       fontFamily: 'Rajdhani, sans-serif',
                       margin: 0
@@ -247,7 +223,7 @@ const PlaybooksTab = ({
                             
                             {step.description && (
                               <p style={{ 
-                                color: isDark ? '#9CA3AF' : '#2D3748', 
+                                color: isDark ? '#9CA3AF' : '#1A1A1A', 
                                 fontSize: '14px', 
                                 marginBottom: '12px',
                                 fontFamily: 'Rajdhani, sans-serif',
@@ -260,7 +236,7 @@ const PlaybooksTab = ({
                             {step.checklist && step.checklist.length > 0 && (
                               <div style={{ marginBottom: '12px' }}>
                                 <p style={{ 
-                                  color: '#E0E6ED', 
+                                  color: isDark ? '#E0E6ED' : '#000000', 
                                   fontSize: '13px', 
                                   fontFamily: 'Rajdhani, sans-serif',
                                   fontWeight: 600,
@@ -271,7 +247,7 @@ const PlaybooksTab = ({
                                 <ul style={{ 
                                   margin: 0, 
                                   paddingLeft: '20px', 
-                                  color: '#E0E6ED', 
+                                  color: isDark ? '#E0E6ED' : '#000000', 
                                   fontSize: '13px', 
                                   fontFamily: 'Rajdhani, sans-serif',
                                   lineHeight: '1.8'
@@ -300,7 +276,7 @@ const PlaybooksTab = ({
                                 borderRadius: '4px'
                               }}>
                                 <p style={{ 
-                                  color: '#E0E6ED', 
+                                  color: isDark ? '#E0E6ED' : '#000000', 
                                   fontSize: '13px', 
                                   fontFamily: 'Rajdhani, sans-serif',
                                   fontWeight: 600,
@@ -309,7 +285,7 @@ const PlaybooksTab = ({
                                   Yorum:
                                 </p>
                                 <p style={{ 
-                                  color: isDark ? '#9CA3AF' : '#2D3748', 
+                                  color: isDark ? '#9CA3AF' : '#1A1A1A', 
                                   fontSize: '13px', 
                                   fontFamily: 'Rajdhani, sans-serif',
                                   lineHeight: '1.6',
@@ -363,7 +339,7 @@ const PlaybooksTab = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '20px', fontWeight: 700, color: '#E0E6ED' }}>
+              <h3 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '20px', fontWeight: 700, color: isDark ? '#E0E6ED' : '#000000' }}>
                 Playbook Ekle
               </h3>
               <button
@@ -392,7 +368,7 @@ const PlaybooksTab = ({
                       background: '#0F1115',
                       border: '1px solid #2A2F38',
                       borderRadius: '4px',
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontFamily: 'Rajdhani, sans-serif',
@@ -450,7 +426,7 @@ const PlaybooksTab = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '24px', fontWeight: 700, color: '#E0E6ED' }}>
+              <h3 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '24px', fontWeight: 700, color: isDark ? '#E0E6ED' : '#000000' }}>
                 {selectedCasePlaybook.name}
               </h3>
               <button
@@ -582,7 +558,7 @@ const PlaybooksTab = ({
                     
                     {selectedCasePlaybook.steps[currentStepIndex]?.description && (
                       <p style={{ 
-                        color: isDark ? '#9CA3AF' : '#2D3748', 
+                        color: isDark ? '#9CA3AF' : '#1A1A1A', 
                         fontSize: '14px', 
                         marginBottom: '16px',
                         fontFamily: 'Rajdhani, sans-serif',
@@ -596,7 +572,7 @@ const PlaybooksTab = ({
                      selectedCasePlaybook.steps[currentStepIndex].checklist.length > 0 && (
                       <div style={{ marginBottom: '20px' }}>
                         <p style={{ 
-                          color: '#E0E6ED', 
+                          color: isDark ? '#E0E6ED' : '#000000', 
                           fontSize: '14px', 
                           fontFamily: 'Rajdhani, sans-serif',
                           fontWeight: 600,
@@ -660,7 +636,7 @@ const PlaybooksTab = ({
                       <label style={{ 
                         display: 'block', 
                         marginBottom: '8px', 
-                        color: '#E0E6ED', 
+                        color: isDark ? '#E0E6ED' : '#000000', 
                         fontFamily: 'Rajdhani, sans-serif',
                         fontWeight: 600,
                         fontSize: '14px'
@@ -679,7 +655,7 @@ const PlaybooksTab = ({
                           background: '#0F1115',
                           border: '1px solid #2A2F38',
                           borderRadius: '4px',
-                          color: '#E0E6ED',
+                          color: isDark ? '#E0E6ED' : '#000000',
                           fontFamily: 'Rajdhani, sans-serif',
                           minHeight: '100px',
                           resize: 'vertical'

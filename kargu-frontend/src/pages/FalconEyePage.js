@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Activity, AlertTriangle, Check } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import { dashboardAPI } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const DashboardPage = () => {
+  const { isDark } = useTheme();
   const [stats, setStats] = useState({
     totalCases: 0,
     openCases: 0,
@@ -54,7 +56,7 @@ const DashboardPage = () => {
     <h3
       style={{
         fontFamily: 'Rajdhani, sans-serif',
-        color: '#E0E6ED',
+        color: isDark ? '#E0E6ED' : '#000000',
         fontSize: '18px',
         fontWeight: 600
       }}

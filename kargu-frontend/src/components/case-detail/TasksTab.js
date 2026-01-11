@@ -33,19 +33,6 @@ const TasksTab = ({
   const { isDark } = useTheme();
   return (
     <div>
-      {/* Create Task Button - Only for case owner and case is not resolved */}
-      {isCaseOwner && !isCaseResolved && (
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={() => setShowCreateTaskModal(true)}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Yeni Task Ekle
-          </button>
-        </div>
-      )}
-
       {/* Tasks List */}
       {loadingTasks ? (
         <div className="text-center py-8">
@@ -83,7 +70,7 @@ const TasksTab = ({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                     <h4 style={{ 
-                      color: '#E0E6ED', 
+                      color: isDark ? '#E0E6ED' : '#000000', 
                       fontFamily: 'Rajdhani, sans-serif',
                       fontWeight: 700,
                       fontSize: '16px',
@@ -100,7 +87,7 @@ const TasksTab = ({
                   </div>
                   {task.description && (
                     <p style={{ 
-                      color: isDark ? '#9CA3AF' : '#2D3748', 
+                      color: isDark ? '#9CA3AF' : '#1A1A1A', 
                       fontSize: '13px',
                       margin: '8px 0',
                       fontFamily: 'JetBrains Mono, monospace'
@@ -108,7 +95,7 @@ const TasksTab = ({
                       {task.description.length > 100 ? `${task.description.substring(0, 100)}...` : task.description}
                     </p>
                   )}
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: isDark ? '#6B7280' : '#4A5568' }}>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: isDark ? '#6B7280' : '#404040' }}>
                     {task.assigned_to_username && (
                       <span>Atanan: <strong style={{ color: '#00C896' }}>{task.assigned_to_username}</strong></span>
                     )}
@@ -130,7 +117,7 @@ const TasksTab = ({
                         border: '1px solid #2A2F38',
                         borderRadius: '4px',
                         padding: '6px 12px',
-                        color: isDark ? '#9CA3AF' : '#2D3748',
+                        color: isDark ? '#9CA3AF' : '#1A1A1A',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -157,7 +144,7 @@ const TasksTab = ({
                         border: '1px solid #2A2F38',
                         borderRadius: '4px',
                         padding: '6px 12px',
-                        color: isDark ? '#9CA3AF' : '#2D3748',
+                        color: isDark ? '#9CA3AF' : '#1A1A1A',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',

@@ -8,7 +8,18 @@ const getAuthHeader = () => {
 
 const handleResponse = async (response) => {
   if (!response.ok) {
-    const error = await response.json();
+    // 401 veya 403 hatası alındığında otomatik logout yap
+    if (response.status === 401 || response.status === 403) {
+      // Token geçersiz veya expired - localStorage'ı temizle
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Sayfayı yenile ki AuthContext logout'u algılasın ve login sayfasına yönlendirsin
+      window.location.reload();
+      // Promise'i reject et ki çağıran kod hata alsın
+      const error = await response.json().catch(() => ({ error: 'Authentication failed' }));
+      throw new Error(error.error || 'Authentication failed');
+    }
+    const error = await response.json().catch(() => ({ error: 'Request failed' }));
     throw new Error(error.error || 'Request failed');
   }
   return response.json();
@@ -29,7 +40,17 @@ export const authAPI = {
     const response = await fetch(`${API_URL}/auth/verify`, {
       headers: getAuthHeader()
     });
-    return handleResponse(response);
+    // verifyToken için özel handler - reload yapmadan sadece hata fırlat
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        // Token geçersiz - sadece localStorage'ı temizle, reload yapma
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+      const error = await response.json().catch(() => ({ error: 'Token verification failed' }));
+      throw new Error(error.error || 'Token verification failed');
+    }
+    return response.json();
   }
 };
 
@@ -79,6 +100,18 @@ export const userAPI = {
       headers: getAuthHeader()
     });
     return handleResponse(response);
+  },
+
+  updateProfile: async (userData) => {
+    const response = await fetch(`${API_URL}/users/me/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader()
+      },
+      body: JSON.stringify(userData)
+    });
+    return handleResponse(response);
   }
 };
 
@@ -105,14 +138,25 @@ export const caseAPI = {
     return handleResponse(response);
   },
 
-  create: async (caseData) => {
+  create: async (caseData, file) => {
+    const formData = new FormData();
+    formData.append('title', caseData.title);
+    formData.append('description', caseData.description || '');
+    formData.append('severity', caseData.severity || 'medium');
+    formData.append('assigned_to', caseData.assigned_to || '');
+    
+    if (file) {
+      formData.append('forensicFile', file);
+    }
+
+    const headers = getAuthHeader();
+    // FormData kullanırken Content-Type header'ını eklemeyin, browser otomatik ekler
+    delete headers['Content-Type'];
+
     const response = await fetch(`${API_URL}/cases`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeader()
-      },
-      body: JSON.stringify(caseData)
+      headers: headers,
+      body: formData
     });
     return handleResponse(response);
   },
@@ -375,6 +419,40 @@ export const notificationAPI = {
   markAllAsRead: async () => {
     const response = await fetch(`${API_URL}/notifications/read-all`, {
       method: 'PATCH',
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  }
+};
+
+// Forensic API
+export const forensicAPI = {
+  getFileData: async (caseId) => {
+    const response = await fetch(`${API_URL}/forensic/cases/${caseId}/file`, {
+      headers: getAuthHeader()
+    });
+    return handleResponse(response);
+  },
+
+  addArtifact: async (caseId, file) => {
+    const formData = new FormData();
+    formData.append('forensicFile', file);
+
+    const headers = getAuthHeader();
+    // FormData kullanırken Content-Type header'ını eklemeyin
+    delete headers['Content-Type'];
+
+    const response = await fetch(`${API_URL}/forensic/cases/${caseId}/artifact`, {
+      method: 'POST',
+      headers: headers,
+      body: formData
+    });
+    return handleResponse(response);
+  },
+
+  deleteArtifact: async (caseId, fileId) => {
+    const response = await fetch(`${API_URL}/forensic/cases/${caseId}/artifact/${fileId}`, {
+      method: 'DELETE',
       headers: getAuthHeader()
     });
     return handleResponse(response);

@@ -1,8 +1,73 @@
 const CaseModel = require('../models/caseModel');
 const TaskModel = require('../models/taskModel');
 const NotificationService = require('../services/notificationService');
+const { pool } = require('../config/database');
+const { parseFile } = require('../utils/fileParser');
+const path = require('path');
 
 class CaseController {
+  // Düz process array'ini tree yapısına dönüştür
+  static convertProcessArrayToTree(processArray) {
+    if (!Array.isArray(processArray) || processArray.length === 0) {
+      return [];
+    }
+
+    // Process'leri normalize et ve map oluştur
+    const processMap = new Map();
+    const rootProcesses = [];
+
+    // Önce tüm process'leri normalize et ve map'e ekle
+    processArray.forEach(proc => {
+      const normalized = {
+        pid: proc.pid,
+        ppid: proc.ppid,
+        name: proc.name || proc.process_name || 'Unknown',
+        process_name: proc.process_name || proc.name,
+        user: proc.user || proc.username || 'Unknown',
+        startTime: proc.startTime || proc.start_time || null,
+        status: proc.status || 'running',
+        suspicious: proc.suspicious || false,
+        path: proc.path || null,
+        command_line: proc.command_line || proc.commandLine || null,
+        session_id: proc.session_id || null,
+        integrity_level: proc.integrity_level || null,
+        children: []
+      };
+      processMap.set(proc.pid, normalized);
+    });
+
+    // Parent-child ilişkilerini kur
+    processArray.forEach(proc => {
+      const current = processMap.get(proc.pid);
+      if (!current) return;
+
+      const parentPid = proc.ppid;
+      
+      // ppid 0 veya null ise root process
+      if (!parentPid || parentPid === 0) {
+        rootProcesses.push(current);
+      } else {
+        const parent = processMap.get(parentPid);
+        if (parent) {
+          parent.children.push(current);
+        } else {
+          // Parent bulunamazsa root olarak ekle
+          rootProcesses.push(current);
+        }
+      }
+    });
+
+    // Children'ları PID'ye göre sırala (görsel düzen için)
+    const sortChildren = (process) => {
+      if (process.children && process.children.length > 0) {
+        process.children.sort((a, b) => (a.pid || 0) - (b.pid || 0));
+        process.children.forEach(sortChildren);
+      }
+    };
+    rootProcesses.forEach(sortChildren);
+
+    return rootProcesses;
+  }
   static async getAllCases(req, res) {
     try {
       const cases = await CaseModel.findAll();
@@ -39,6 +104,58 @@ class CaseController {
       // Get tasks from database
       const tasks = await TaskModel.findAllByCaseId(req.params.id);
 
+      // Get network connections from database
+      const networkConnectionsResult = await pool.query(
+        'SELECT local_address, remote_address, protocol, state, process_name, pid FROM case_network_connections WHERE case_id = $1 ORDER BY id',
+        [req.params.id]
+      );
+      const networkConnections = networkConnectionsResult.rows.map(row => ({
+        localAddress: row.local_address,
+        remoteAddress: row.remote_address,
+        protocol: row.protocol,
+        state: row.state,
+        processName: row.process_name,
+        pid: row.pid
+      }));
+      console.log(`Retrieved ${networkConnections.length} network connections for case ${req.params.id}`);
+
+      // Get process tree from database
+      const processTreeResult = await pool.query(
+        'SELECT process_data FROM case_process_trees WHERE case_id = $1 ORDER BY created_at DESC LIMIT 1',
+        [req.params.id]
+      );
+      let processTree = [];
+      if (processTreeResult.rows.length > 0) {
+        const processData = processTreeResult.rows[0].process_data;
+        // PostgreSQL JSONB otomatik parse eder, ama string ise parse et
+        if (typeof processData === 'string') {
+          try {
+            processTree = JSON.parse(processData);
+          } catch (parseError) {
+            console.error('Error parsing process tree:', parseError);
+            processTree = [];
+          }
+        } else {
+          processTree = processData || [];
+        }
+        console.log(`Retrieved process tree for case ${req.params.id}: ${Array.isArray(processTree) ? processTree.length : 'invalid'} items`);
+      } else {
+        console.log(`No process tree found for case ${req.params.id}`);
+      }
+
+      // Get forensic file info
+      const forensicFileResult = await pool.query(
+        'SELECT filename, filepath, file_type FROM case_forensic_files WHERE case_id = $1 ORDER BY created_at DESC LIMIT 1',
+        [req.params.id]
+      );
+      let forensicFile = null;
+      if (forensicFileResult.rows.length > 0) {
+        forensicFile = forensicFileResult.rows[0];
+        console.log(`Forensic file found for case ${req.params.id}:`, forensicFile.filename);
+      } else {
+        console.log(`No forensic file found for case ${req.params.id}`);
+      }
+
       // Mock data - ileride gerçek verilerle değiştirilecek
       const detailData = {
         case: caseData,
@@ -70,7 +187,7 @@ class CaseController {
           { id: 2, type: 'IP Address', value: '185.220.101.45', threat_level: 'Critical', first_seen: '2024-01-12', source: 'ThreatFeed' },
           { id: 3, type: 'Domain', value: 'malicious-domain.com', threat_level: 'Medium', first_seen: '2024-01-14', source: 'AlienVault' }
         ],
-        processTree: [
+        processTree: processTree.length > 0 ? processTree : [
           {
             pid: 4,
             name: 'System',
@@ -175,7 +292,145 @@ class CaseController {
               }
             ]
           }
-        ]
+        ],
+        networkConnections: networkConnections.length > 0 ? networkConnections : [
+          {
+            localAddress: '192.168.1.105:52341',
+            remoteAddress: '185.220.101.45:443',
+            protocol: 'TCP',
+            state: 'ESTABLISHED',
+            processName: 'chrome.exe',
+            pid: 2456,
+            suspicious: true
+          },
+          {
+            localAddress: '192.168.1.105:52342',
+            remoteAddress: '8.8.8.8:53',
+            protocol: 'UDP',
+            state: 'ESTABLISHED',
+            processName: 'svchost.exe',
+            pid: 1234,
+            suspicious: false
+          },
+          {
+            localAddress: '0.0.0.0:80',
+            remoteAddress: null,
+            protocol: 'TCP',
+            state: 'LISTENING',
+            processName: 'httpd.exe',
+            pid: 4567,
+            suspicious: false
+          },
+          {
+            localAddress: '192.168.1.105:52343',
+            remoteAddress: '45.33.32.156:443',
+            protocol: 'TCP',
+            state: 'ESTABLISHED',
+            processName: 'powershell.exe',
+            pid: 3456,
+            suspicious: true
+          },
+          {
+            localAddress: '192.168.1.105:52344',
+            remoteAddress: '172.217.16.14:443',
+            protocol: 'TCP',
+            state: 'ESTABLISHED',
+            processName: 'chrome.exe',
+            pid: 2456,
+            suspicious: false
+          },
+          {
+            localAddress: '0.0.0.0:445',
+            remoteAddress: null,
+            protocol: 'TCP',
+            state: 'LISTENING',
+            processName: 'System',
+            pid: 4,
+            suspicious: false
+          },
+          {
+            localAddress: '192.168.1.105:52345',
+            remoteAddress: '198.51.100.42:8080',
+            protocol: 'TCP',
+            state: 'ESTABLISHED',
+            processName: 'malware.exe',
+            pid: 3678,
+            suspicious: true
+          },
+          {
+            localAddress: '192.168.1.105:52346',
+            remoteAddress: '1.1.1.1:53',
+            protocol: 'UDP',
+            state: 'ESTABLISHED',
+            processName: 'svchost.exe',
+            pid: 1234,
+            suspicious: false
+          },
+          {
+            localAddress: '0.0.0.0:3389',
+            remoteAddress: null,
+            protocol: 'TCP',
+            state: 'LISTENING',
+            processName: 'svchost.exe',
+            pid: 1234,
+            suspicious: false
+          },
+          {
+            localAddress: '192.168.1.105:52347',
+            remoteAddress: '203.0.113.10:443',
+            protocol: 'TCP',
+            state: 'TIME_WAIT',
+            processName: 'explorer.exe',
+            pid: 1234,
+            suspicious: false
+          },
+          {
+            localAddress: '192.168.1.105:52348',
+            remoteAddress: '192.0.2.1:4444',
+            protocol: 'TCP',
+            state: 'ESTABLISHED',
+            processName: 'cmd.exe',
+            pid: 5678,
+            suspicious: true
+          },
+          {
+            localAddress: '0.0.0.0:135',
+            remoteAddress: null,
+            protocol: 'TCP',
+            state: 'LISTENING',
+            processName: 'svchost.exe',
+            pid: 1234,
+            suspicious: false
+          },
+          {
+            localAddress: '192.168.1.105:52349',
+            remoteAddress: '93.184.216.34:80',
+            protocol: 'TCP',
+            state: 'ESTABLISHED',
+            processName: 'chrome.exe',
+            pid: 2456,
+            suspicious: false
+          },
+          {
+            localAddress: '192.168.1.105:52350',
+            remoteAddress: '185.220.101.45:443',
+            protocol: 'TCP',
+            state: 'ESTABLISHED',
+            processName: 'powershell.exe',
+            pid: 3456,
+            suspicious: true
+          },
+          {
+            localAddress: '0.0.0.0:49152',
+            remoteAddress: null,
+            protocol: 'TCP',
+            state: 'LISTENING',
+            processName: 'svchost.exe',
+            pid: 1234,
+            suspicious: false
+          }
+        ],
+        forensicFile: forensicFile
       };
 
       res.json(detailData);
@@ -200,6 +455,113 @@ class CaseController {
         assigned_to,
         created_by: req.user.id
       });
+
+      // Eğer dosya yüklendiyse işle
+      if (req.file) {
+        try {
+          const filePath = req.file.path;
+          console.log(`Parsing file: ${filePath} for case ${caseData.id}`);
+          const fileData = await parseFile(filePath);
+          console.log(`File parsed successfully. Keys: ${Object.keys(fileData).join(', ')}`);
+          
+          // Dosya bilgisini database'e kaydet
+          await pool.query(
+            `INSERT INTO case_forensic_files (case_id, filename, filepath, file_type) 
+             VALUES ($1, $2, $3, $4)`,
+            [caseData.id, req.file.filename, filePath, path.extname(req.file.originalname).substring(1)]
+          );
+          console.log(`Forensic file saved for case ${caseData.id}: ${req.file.filename}`);
+
+          // Network connections varsa database'e kaydet
+          // Hem networkConnections hem de network_connections field'larını kontrol et
+          const networkConnections = fileData.networkConnections || fileData.network_connections;
+          console.log(`Network connections found: ${networkConnections ? (Array.isArray(networkConnections) ? networkConnections.length : 'not an array') : 'null/undefined'}`);
+          
+          if (networkConnections && Array.isArray(networkConnections)) {
+            console.log(`Saving ${networkConnections.length} network connections for case ${caseData.id}`);
+            let savedCount = 0;
+            let errorCount = 0;
+            
+            for (const conn of networkConnections) {
+              try {
+                // Farklı field isim formatlarını destekle
+                const localIP = conn.localAddress || conn.local_address || conn.local_ip;
+                const localPort = conn.localPort || conn.local_port;
+                const remoteIP = conn.remoteAddress || conn.remote_address || conn.remote_ip;
+                const remotePort = conn.remotePort || conn.remote_port;
+                const processName = conn.processName || conn.process_name || conn.process;
+                
+                // IP ve port'u birleştir - sadece geçerli IP varsa
+                let localAddress = null;
+                if (localIP) {
+                  localAddress = localPort ? `${localIP}:${localPort}` : localIP;
+                }
+                
+                let remoteAddress = null;
+                if (remoteIP) {
+                  remoteAddress = remotePort ? `${remoteIP}:${remotePort}` : remoteIP;
+                }
+                
+                await pool.query(
+                  `INSERT INTO case_network_connections 
+                   (case_id, local_address, remote_address, protocol, state, process_name, pid) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                  [
+                    caseData.id,
+                    localAddress,
+                    remoteAddress,
+                    conn.protocol || 'TCP',
+                    conn.state || 'ESTABLISHED',
+                    processName || null,
+                    conn.pid || null
+                  ]
+                );
+                savedCount++;
+              } catch (connError) {
+                errorCount++;
+                console.error(`Error saving network connection (${errorCount}):`, connError.message);
+                console.error('Connection data:', JSON.stringify(conn));
+                // Bir bağlantı hatası diğerlerini engellemez
+              }
+            }
+            console.log(`Network connections saved: ${savedCount} successful, ${errorCount} failed for case ${caseData.id}`);
+          } else {
+            console.log(`No network connections data found or invalid format for case ${caseData.id}`);
+          }
+
+          // Process tree varsa database'e kaydet
+          // Hem processTree, process_tree, processtree ve processlist field'larını kontrol et
+          let processTree = fileData.processTree || fileData.process_tree || fileData.processtree || fileData.processlist;
+          console.log(`Process tree found: ${processTree ? (Array.isArray(processTree) ? `array with ${processTree.length} items` : typeof processTree) : 'null/undefined'}`);
+          
+          if (processTree && Array.isArray(processTree)) {
+            // Eğer düz array ise (ppid ile parent-child ilişkisi varsa), tree yapısına dönüştür
+            if (processTree.length > 0 && processTree[0].ppid !== undefined) {
+              console.log(`Converting flat process array to tree structure for case ${caseData.id}`);
+              processTree = CaseController.convertProcessArrayToTree(processTree);
+            }
+            
+            console.log(`Saving process tree for case ${caseData.id}`);
+            try {
+              await pool.query(
+                `INSERT INTO case_process_trees (case_id, process_data) 
+                 VALUES ($1, $2::jsonb)`,
+                [caseData.id, JSON.stringify(processTree)]
+              );
+              console.log(`Successfully saved process tree for case ${caseData.id}`);
+            } catch (treeError) {
+              console.error('Error saving process tree:', treeError);
+              throw treeError;
+            }
+          } else {
+            console.log(`No process tree data found in file for case ${caseData.id}`);
+          }
+        } catch (fileError) {
+          console.error('Error processing uploaded file:', fileError);
+          console.error('Error stack:', fileError.stack);
+          // Dosya hatası case oluşturmayı engellemez
+        }
+      }
 
       res.status(201).json(caseData);
     } catch (err) {

@@ -8,14 +8,29 @@ const CreateCaseModal = ({ isOpen, onClose, onCreate, users }) => {
     severity: 'medium',
     assigned_to: ''
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (['json', 'xml', 'csv'].includes(ext)) {
+        setSelectedFile(file);
+      } else {
+        alert('Only JSON, XML, and CSV files are allowed!');
+        e.target.value = '';
+      }
+    }
+  };
 
   const handleSubmit = () => {
     if (!form.title) {
       alert('Please enter a title');
       return;
     }
-    onCreate(form);
+    onCreate(form, selectedFile);
     setForm({ title: '', description: '', severity: 'medium', assigned_to: '' });
+    setSelectedFile(null);
   };
 
   return (
@@ -57,7 +72,7 @@ const CreateCaseModal = ({ isOpen, onClose, onCreate, users }) => {
           </select>
         </div>
         
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block mb-2 text-sm">Assign To</label>
           <select
             value={form.assigned_to}
@@ -71,6 +86,25 @@ const CreateCaseModal = ({ isOpen, onClose, onCreate, users }) => {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="mb-6">
+          <label className="block mb-2 text-sm">Forensic Data File (Optional)</label>
+          <input
+            type="file"
+            accept=".json,.xml,.csv"
+            onChange={handleFileChange}
+            className="input-field"
+            style={{ padding: '8px' }}
+          />
+          {selectedFile && (
+            <p className="text-xs text-muted mt-1" style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+              Selected: {selectedFile.name}
+            </p>
+          )}
+          <p className="text-xs text-muted mt-1">
+            Accepted formats: JSON, XML, CSV
+          </p>
         </div>
         
         <button

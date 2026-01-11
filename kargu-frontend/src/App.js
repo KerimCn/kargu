@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage';
 import CasesPage from './pages/CasesPage';
 import UsersPage from './pages/UsersPage';
 import PlaybooksPage from './pages/PlaybooksPage';
+import SettingsPage from './pages/SettingsPage';
 import './styles/index.css';
 
 const AppContent = () => {
@@ -43,8 +44,8 @@ const AppContent = () => {
       {/* Main Content Area - Centered */}
       <div 
         style={{ 
-          marginLeft: '80px',
-          paddingTop: '72px',
+          marginLeft: '60px',
+          paddingTop: '57px',
           minHeight: '100vh',
           display: 'flex',
           justifyContent: 'center'
@@ -64,6 +65,7 @@ const AppContent = () => {
           )}
           {currentPage === 'users' && <UsersPage />}
           {currentPage === 'playbooks' && <PlaybooksPage />}
+          {currentPage === 'settings' && <SettingsPage />}
         </div>
       </div>
     </div>

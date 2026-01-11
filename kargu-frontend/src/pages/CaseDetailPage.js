@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Monitor, Clock, User, Server, Search, Lock, Send, Edit } from 'lucide-react';
-import { caseAPI, commentAPI, taskAPI, userAPI, playbookAPI, casePlaybookAPI, playbookExecutionAPI } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Monitor, Clock, User, Server, Search, Lock, Send, Edit, Network, Upload, X, Plus } from 'lucide-react';
+import { caseAPI, commentAPI, taskAPI, userAPI, playbookAPI, casePlaybookAPI, playbookExecutionAPI, forensicAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Modal from '../components/common/Modal';
@@ -10,6 +10,7 @@ import PlaybooksTab from '../components/case-detail/PlaybooksTab';
 import CommentsTab from '../components/case-detail/CommentsTab';
 import IOCTab from '../components/case-detail/IOCTab';
 import ProcessTreeTab from '../components/case-detail/ProcessTreeTab';
+import NetworkConnectionsTab from '../components/case-detail/NetworkConnectionsTab';
 
 const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
   const { user } = useAuth();
@@ -59,10 +60,62 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
   const [stepComment, setStepComment] = useState('');
   const [playbookExecutions, setPlaybookExecutions] = useState({});
   const [expandedPlaybooks, setExpandedPlaybooks] = useState(new Set());
+  const [showArtifactModal, setShowArtifactModal] = useState(false);
+  const [uploadingArtifact, setUploadingArtifact] = useState(false);
+  const [dataTabRefreshKey, setDataTabRefreshKey] = useState(0);
+  const artifactFileInputRef = useRef(null);
+  const [forensicFilesData, setForensicFilesData] = useState([]);
 
   useEffect(() => {
     fetchCaseDetail();
+    fetchForensicFilesData();
   }, [caseId]);
+
+  const fetchForensicFilesData = async () => {
+    if (!caseId) return;
+    
+    try {
+      const filesData = await forensicAPI.getFileData(caseId);
+      const filesArray = Array.isArray(filesData) ? filesData : [filesData];
+      
+      // Extract network connections and process tree from each file
+      const filesWithExtractedData = filesArray.map(file => {
+        const fileData = file.data || file;
+        const hostname = file.hostname || file.metadata?.hostname || `Machine-${file.id}`;
+        
+        // Extract network connections (support both network_connections and networkConnections)
+        const networkConnectionsRaw = fileData.network_connections || fileData.networkConnections || [];
+        const networkConnections = networkConnectionsRaw.map(conn => ({
+          localAddress: conn.local_ip && conn.local_port 
+            ? `${conn.local_ip}:${conn.local_port}` 
+            : conn.local_address || conn.localAddress || 'N/A',
+          remoteAddress: conn.remote_ip && conn.remote_port 
+            ? `${conn.remote_ip}:${conn.remote_port}` 
+            : conn.remote_address || conn.remoteAddress || 'N/A',
+          protocol: conn.protocol || 'N/A',
+          state: conn.state || 'N/A',
+          processName: conn.process || conn.process_name || conn.processName || 'N/A',
+          pid: conn.pid || null
+        }));
+        
+        // Extract process tree (support both processlist and processTree)
+        const processList = fileData.processlist || fileData.processTree || fileData.process_list || [];
+        
+        return {
+          id: file.id,
+          hostname: hostname,
+          filename: file.filename,
+          networkConnections: networkConnections,
+          processTree: processList
+        };
+      });
+      
+      setForensicFilesData(filesWithExtractedData);
+    } catch (error) {
+      console.error('Error fetching forensic files data:', error);
+      setForensicFilesData([]);
+    }
+  };
 
   useEffect(() => {
     if (initialTab) {
@@ -435,11 +488,12 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
     );
   }
 
-  const { case: caseInfo, machine, data, playbooks, ioc, processTree } = detailData;
+  const { case: caseInfo, machine, data, playbooks, ioc, processTree, networkConnections = [], forensicFile } = detailData;
   const isCaseOwner = user && caseInfo.assigned_to === user.id;
   const isCaseCreator = user && caseInfo.created_by === user.id;
   const isCaseResolved = caseInfo.status === 'resolved';
   const canReopenCase = isCaseOwner || isCaseCreator;
+  const canManagePlaybooks = isCaseOwner || isCaseCreator;
 
   const handleOpenEditCaseModal = () => {
     setEditCaseForm({
@@ -474,7 +528,8 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
     { id: 'playbooks', label: 'Playbooks', icon: Monitor },
     { id: 'comments', label: 'Comments', icon: Clock },
     { id: 'ioc', label: 'IOC', icon: Search },
-    { id: 'process', label: 'Process Tree', icon: Monitor }
+    { id: 'process', label: 'Process Tree', icon: Monitor },
+    { id: 'network', label: 'Network Connections', icon: Network }
   ];
 
   const renderTabContent = () => {
@@ -482,9 +537,18 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
       case 'data':
         return (
           <DataTab 
+            key={dataTabRefreshKey}
             data={data} 
             searchTerm={searchTerm} 
-            setSearchTerm={setSearchTerm} 
+            setSearchTerm={setSearchTerm}
+            caseId={caseId}
+            forensicFile={forensicFile || null}
+            onMachineRemoved={async () => {
+              // Refresh forensic files data to update network connections and process tree
+              await fetchForensicFilesData();
+              // Refresh DataTab by changing key
+              setDataTabRefreshKey(prev => prev + 1);
+            }}
           />
         );
 
@@ -523,6 +587,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
           <PlaybooksTab
             isCaseOwner={isCaseOwner}
             isCaseCreator={isCaseCreator}
+            canManagePlaybooks={canManagePlaybooks}
             casePlaybooks={casePlaybooks}
             allPlaybooks={allPlaybooks}
             playbookExecutions={playbookExecutions}
@@ -580,7 +645,20 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
 
       case 'process':
         return (
-          <ProcessTreeTab processTree={processTree} caseId={caseId} />
+          <ProcessTreeTab 
+            processTree={processTree} 
+            forensicFilesData={forensicFilesData}
+            caseId={caseId} 
+          />
+        );
+
+      case 'network':
+        return (
+          <NetworkConnectionsTab 
+            networkConnections={networkConnections} 
+            forensicFilesData={forensicFilesData}
+            caseId={caseId} 
+          />
         );
 
       default:
@@ -672,7 +750,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
                 <div className="text-xs text-muted mb-1">Machine Name</div>
                 <div 
                   className="font-bold" 
-                  style={{ fontFamily: 'JetBrains Mono, monospace', color: '#E0E6ED' }}
+                  style={{ fontFamily: 'JetBrains Mono, monospace', color: isDark ? '#E0E6ED' : '#000000' }}
                 >
                   {machine.name}
                 </div>
@@ -751,7 +829,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
                     className="font-semibold" 
                     style={{ 
                       fontFamily: 'JetBrains Mono, monospace', 
-                      color: '#E0E6ED',
+                      color: isDark ? '#E0E6ED' : '#000000',
                       fontSize: '13px',
                       lineHeight: '1.6',
                       whiteSpace: 'pre-wrap',
@@ -771,33 +849,132 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
       <div className="card">
         <div 
           className="flex gap-2 mb-6"
-          style={{ borderBottom: '1px solid #2A2F38', paddingBottom: '12px' }}
+          style={{ borderBottom: '1px solid #2A2F38', paddingBottom: '12px', justifyContent: 'space-between', alignItems: 'center' }}
         >
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setSearchTerm('');
-                }}
-                className="flex items-center gap-2 px-4 py-2"
-                style={{
-                  background: activeTab === tab.id ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
-                  border: activeTab === tab.id ? '1px solid #FF4D4D' : '1px solid transparent',
-                  borderRadius: '2px',
-                  color: activeTab === tab.id ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#1A1F2E'),
-                  fontFamily: 'Rajdhani, sans-serif',
-                  fontWeight: 600,
-                  transition: 'all 0.2s'
-                }}
-              >
-                <Icon size={16} />
-                {tab.label}
-              </button>
-            );
-          })}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setSearchTerm('');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2"
+                  style={{
+                    background: activeTab === tab.id ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
+                    border: activeTab === tab.id ? '1px solid #FF4D4D' : '1px solid transparent',
+                    borderRadius: '2px',
+                    color: activeTab === tab.id ? '#FF4D4D' : (isDark ? '#9CA3AF' : '#000000'),
+                    fontFamily: 'Rajdhani, sans-serif',
+                    fontWeight: 600,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Icon size={16} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Tab Action Buttons - Only show when respective tab is active */}
+          {activeTab === 'data' && (
+            <button
+              onClick={() => setShowArtifactModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderRadius: '4px',
+                border: 'none',
+                background: '#FF4D4D',
+                color: '#FFFFFF',
+                fontFamily: 'Rajdhani, sans-serif',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#E63946';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#FF4D4D';
+              }}
+            >
+              <Upload size={16} />
+              Artifact Ekle
+            </button>
+          )}
+          
+          {activeTab === 'tasks' && isCaseOwner && !isCaseResolved && (
+            <button
+              onClick={() => setShowCreateTaskModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderRadius: '4px',
+                border: 'none',
+                background: '#FF4D4D',
+                color: '#FFFFFF',
+                fontFamily: 'Rajdhani, sans-serif',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#E63946';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#FF4D4D';
+              }}
+            >
+              <Plus size={16} />
+              Task Ekle
+            </button>
+          )}
+          
+          {activeTab === 'playbooks' && canManagePlaybooks && (
+            <button
+              onClick={() => setShowAddPlaybookModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderRadius: '4px',
+                border: 'none',
+                background: '#FF4D4D',
+                color: '#FFFFFF',
+                fontFamily: 'Rajdhani, sans-serif',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#E63946';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#FF4D4D';
+              }}
+            >
+              <Plus size={16} />
+              Playbook Ekle
+            </button>
+          )}
         </div>
 
         {/* Tab Content */}
@@ -805,6 +982,144 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Artifact Upload Modal */}
+      {showArtifactModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => !uploadingArtifact && setShowArtifactModal(false)}
+        >
+          <div
+            style={{
+              background: isDark ? '#1E2229' : '#FFFFFF',
+              borderRadius: '8px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '500px',
+              border: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3
+                style={{
+                  fontFamily: 'Rajdhani, sans-serif',
+                  fontSize: '18px',
+                  fontWeight: 700,
+                  color: isDark ? '#E0E6ED' : '#1A1F2E'
+                }}
+              >
+                Add Artifact
+              </h3>
+              <button
+                onClick={() => !uploadingArtifact && setShowArtifactModal(false)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: isDark ? '#E0E6ED' : '#1A1F2E',
+                  cursor: 'pointer',
+                  padding: '4px'
+                }}
+                disabled={uploadingArtifact}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontFamily: 'Rajdhani, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: isDark ? '#E0E6ED' : '#1A1F2E',
+                  marginBottom: '8px'
+                }}
+              >
+                Forensic Data File
+              </label>
+              <input
+                ref={artifactFileInputRef}
+                type="file"
+                accept=".json,.xml,.csv"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+
+                  const ext = file.name.split('.').pop().toLowerCase();
+                  if (!['json', 'xml', 'csv'].includes(ext)) {
+                    alert('Only JSON, XML, and CSV files are allowed!');
+                    e.target.value = '';
+                    return;
+                  }
+
+                  try {
+                    setUploadingArtifact(true);
+                    await forensicAPI.addArtifact(caseId, file);
+                    
+                    // Refresh DataTab by changing key
+                    setDataTabRefreshKey(prev => prev + 1);
+                    
+                    // Refresh forensic files data to update network connections and process tree
+                    await fetchForensicFilesData();
+                    
+                    setShowArtifactModal(false);
+                    if (artifactFileInputRef.current) {
+                      artifactFileInputRef.current.value = '';
+                    }
+                  } catch (error) {
+                    console.error('Error uploading artifact:', error);
+                    alert(error.message || 'Failed to upload artifact');
+                  } finally {
+                    setUploadingArtifact(false);
+                  }
+                }}
+                disabled={uploadingArtifact}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  border: `1px solid ${isDark ? '#2A2F38' : '#E2E8F0'}`,
+                  background: isDark ? '#0F1115' : '#F8F9FA',
+                  color: isDark ? '#E0E6ED' : '#1A1F2E',
+                  fontFamily: 'Rajdhani, sans-serif',
+                  fontSize: '14px',
+                  cursor: uploadingArtifact ? 'not-allowed' : 'pointer'
+                }}
+              />
+              <p
+                style={{
+                  marginTop: '8px',
+                  fontFamily: 'Rajdhani, sans-serif',
+                  fontSize: '12px',
+                  color: isDark ? '#9CA3AF' : '#64748B'
+                }}
+              >
+                Accepted formats: JSON, XML, CSV
+              </p>
+            </div>
+
+            {uploadingArtifact && (
+              <div style={{ textAlign: 'center', padding: '12px', color: '#FF4D4D', fontFamily: 'Rajdhani, sans-serif' }}>
+                Uploading...
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Edit Case Modal */}
       <Modal
@@ -819,7 +1134,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '8px', 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#000000', 
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px'
@@ -839,7 +1154,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '8px', 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#000000', 
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px'
@@ -859,7 +1174,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '8px', 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#000000', 
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px'
@@ -882,7 +1197,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '8px', 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#000000', 
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px'
@@ -936,7 +1251,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
             <label style={{ 
               display: 'block', 
               marginBottom: '8px', 
-              color: '#E0E6ED', 
+              color: isDark ? '#E0E6ED' : '#000000', 
               fontFamily: 'Rajdhani, sans-serif',
               fontWeight: 600,
               fontSize: '14px'
@@ -956,7 +1271,7 @@ const CaseDetailPage = ({ caseId, onBack, initialTab }) => {
               }}
             />
             <p style={{ 
-              color: isDark ? '#9CA3AF' : '#2D3748', 
+              color: isDark ? '#9CA3AF' : '#1A1A1A', 
               fontSize: '12px', 
               marginTop: '4px',
               fontStyle: 'italic'

@@ -1,8 +1,12 @@
 import React from 'react';
 import { Check, Trash2, Lock, Eye, Edit } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const CaseCard = ({ caseData, onUpdate, onDelete, onViewDetail, isAdmin, currentUserId }) => {
+  const { isDark } = useTheme();
   const isCaseCreator = currentUserId && caseData.created_by === currentUserId;
+  const textColor = isDark ? '#E0E6ED' : '#0F172A';
+  
   return (
     <div className="card">
       <div className="flex justify-between items-start">
@@ -12,11 +16,12 @@ const CaseCard = ({ caseData, onUpdate, onDelete, onViewDetail, isAdmin, current
             style={{ 
               fontFamily: 'Rajdhani, sans-serif',
               cursor: 'pointer',
-              transition: 'color 0.2s'
+              transition: 'color 0.2s',
+              color: textColor
             }}
             onClick={() => onViewDetail(caseData.id)}
             onMouseEnter={(e) => e.currentTarget.style.color = '#FF4D4D'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#E0E6ED'}
+            onMouseLeave={(e) => e.currentTarget.style.color = textColor}
           >
             {caseData.title}
           </h3>

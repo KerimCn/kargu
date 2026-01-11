@@ -17,12 +17,42 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
-  }, [token]);
+    const checkAuth = async () => {
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+
+      // Token yoksa direkt logout
+      if (!savedToken) {
+        setToken(null);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Token varsa geçerliliğini kontrol et
+      try {
+        const data = await authAPI.verifyToken();
+        // Token geçerli - kullanıcı bilgilerini set et
+        if (savedUser) {
+          setUser(JSON.parse(savedUser));
+        } else if (data.user) {
+          setUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        setToken(savedToken);
+      } catch (error) {
+        // Token geçersiz veya expired - logout yap
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const login = async (username, password) => {
     try {
@@ -50,6 +80,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     token,
     login,
     logout,
